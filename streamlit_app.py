@@ -63,7 +63,7 @@ def _connect_form_cb(connect_status):
     st.session_state.data = False
 
 
-
+# HEADER: Title and basic input
 head = st.container()
 head1, head2, head3 = head.columns(3)
 
@@ -73,9 +73,10 @@ head2.markdown("<h3 style='text-align: center; color: black;'>Predict a regulato
 acc = head2.text_input("RefSeq ID", "ACS29497.1")
 
 
+
+# Advanced options
 options = st.container()
 options1, options2, options3 = options.columns((1,3,1))
-
 
 with options2.expander("Advanced options"):
     
@@ -92,6 +93,8 @@ params = {
 }
 
 
+
+
 # FORM
 with st.form(key='snowprint'):
 
@@ -103,15 +106,16 @@ with st.form(key='snowprint'):
 
 
 
+# RUN SNOWPRINT
 if st.session_state.SUBMITTED:
 
-
     results = st.container()
+    res1, res2, res3 = results.columns(3)
 
+    st.divider()
 
-    top = st.container()
-    top1, spacer, top3, top4 = top.columns((3,0.2, 2,1))
-
+    intermediate = st.container()
+    blast_col, homologs_col = intermediate.columns((1,2))
 
 
     with st.spinner("blasting your protein"):
@@ -122,10 +126,11 @@ if st.session_state.SUBMITTED:
         end = time.time()
 
         if blast_df.empty:
-            st.error("No blast file made")
+            blast_col.error("No blast file made")
         else:
-            st.write("time elapsed: "+str(round(end-start,2))+" seconds")
-            st.dataframe(blast_df)
+            blast_col.subheader("BLAST results")
+            blast_col.dataframe(blast_df, hide_index=True)
+            blast_col.write("time elapsed: "+str(round(end-start,2))+" seconds")
 
                 #inefficient. I'm converting from a dict to a dataframe, back to a dict.
             homolog_dict = [ 
@@ -137,12 +142,16 @@ if st.session_state.SUBMITTED:
                 for i, row in blast_df.iterrows()
             ]
 
+    with st.spinner("Getting homolog genome coordianates"):
+
             homolog_dict = get_genome_coordinates(homolog_dict)
             # Remove entries without any genome coordinates
             homolog_dict = [i for i in homolog_dict if "accver" in i.keys()]
 
+
+    with st.spinner("Extracting predicted operators for each homolog"):
     
-            prog_bar = st.progress(0, text="Fetching operons")
+            prog_bar = homologs_col.progress(0, text="Fetching operons")
             prog_bar_increment = 100/int(len(homolog_dict))
 
             for i in range(0, len(homolog_dict)):
@@ -150,9 +159,8 @@ if st.session_state.SUBMITTED:
                 prog_bar.progress(prog_value, text=f"Fetching context for homolog {str(i+1)} of {str(len(homolog_dict))} (accession: {homolog_dict[i]['accession']})")
                 homolog_dict[i]["operon"] = acc2operon(homolog_dict[i])
                 homolog_dict[i]["promoter"] = fetch_promoter(homolog_dict[i]["operon"])
-                #promoter = fetch_promoter(operon["operon"], operon["protein_index"], operon["genome"])
             
-            prog_bar.progress(100, text="Complete.")
+            prog_bar.empty()
          
 
             operator_dict = fetch_operator(homolog_dict)
@@ -161,8 +169,11 @@ if st.session_state.SUBMITTED:
             # to display with LogoJS
             motif = operator_dict["motif"]
             
-            st.header(operator_dict["consensus_seq"])
-            st.metric(label="Consensus score", value=operator_dict["consensus_score"])
-            st.metric(label="Number of sequences aligned", value=operator_dict["num_seqs"])
-            st.dataframe(pd.DataFrame(operator_dict["aligned_seqs"]))
+            res2.header(operator_dict["consensus_seq"])
+            metric1, metric2, metric3, metric4 = res2.columns(4)
+            metric1.metric(label="Consensus score", value=operator_dict["consensus_score"])
+            metric2.metric(label="Number of sequences aligned", value=operator_dict["num_seqs"])
+
+            homologs_col.subheader("Predicted homolog operators")
+            homologs_col.dataframe(pd.DataFrame(operator_dict["aligned_seqs"]), hide_index=True)
 

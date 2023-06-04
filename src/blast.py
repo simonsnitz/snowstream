@@ -37,7 +37,7 @@ def blast(acc, params):
 
     seq = accID2sequence(acc)
 
-    flags = 'sseqid pident qcovhsp evalue'
+    flags = 'sseqid pident qcovhsp'
     #subprocess.call(f'diamond blastx -d {db_loc} -q {query.name} -o {tmp.name} '
     #                    f'{parameters} --outfmt 6 {flags} >> {log.name} 2>&1',shell=True)
   
@@ -65,6 +65,7 @@ def blast(acc, params):
         inDf['sseqid'] = inDf['sseqid'].str.split("|", n=2, expand=True)[1]
     except (ValueError, KeyError):
         pass
+    
 
     return inDf
 
