@@ -21,7 +21,7 @@ def uniprot2EMBL(uniprotID):
 
 
     # efetch with a list of IDs
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def get_genome_coordinates(homolog_dict):
 
     for i in homolog_dict:

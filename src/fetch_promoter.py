@@ -4,17 +4,20 @@ import streamlit as st
 from pprint import pprint
 
 
-def fetch_promoter(homolog_dict):
+@st.cache_data(show_spinner=False)
+def fetch_promoter(homolog_dict, params):
 
     operon = homolog_dict["operon"]
     regIndex = homolog_dict["protein_index"]
     genome_id = homolog_dict["genome"]
 
+
+    # Set promoter start and stop coordinates
     if operon[regIndex]["direction"] == "+":
         queryGenes = list(reversed(operon[0:regIndex]))
         index = regIndex
         if len(queryGenes) == 0:
-            # print("WARNING: Tiny operon with too few genes. This entry will be omitted.")
+            # Tiny operon with too few genes. This entry will be omitted.
             return
         for i in queryGenes:
             if i["direction"] == "-":
@@ -26,16 +29,16 @@ def fetch_promoter(homolog_dict):
                 start = operon[regIndex-1]["stop"]
                 stop = operon[regIndex]["start"]
                 testLength = int(stop) - int(start)
-                    # Setting this to 100bp is somewhat arbitrary. 
-                    # Most intergenic regions >= 100bp. May need to tweak.
-                if testLength > 100:
+
+                # Set minimum promoter length. 
+                if testLength > params["min_length"]:
                     startPos = start
                     stopPos = stop
                     regType = 2
                     break
                 else:
                     if index == 1:
-                        # print('WARNING: Reached end of operon. This entry will be omitted')
+                        # Reached end of operon. This entry will be omitted.
                         return None
                     index -= 1
 
@@ -43,7 +46,7 @@ def fetch_promoter(homolog_dict):
         queryGenes = operon[regIndex+1:]
         index = regIndex
         if len(queryGenes) == 0:
-            # print("WARNING: Tiny operon with too few genes. This entry will be omitted.")
+            # Tiny operon with too few genes. This entry will be omitted.
             return
         for i in queryGenes:
             if i["direction"] == "+":
@@ -64,11 +67,13 @@ def fetch_promoter(homolog_dict):
                     break
                 else:
                     if index == len(operon)-2:
-                        # print('WARNING: Reached end of operon. This entry will be omitted')
+                        # Reached end of operon. This entry will be omitted'
                         return None
                     else:
                         index += 1
   
+
+
     URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id="+str(genome_id)+"&seq_start="+str(startPos)+"&seq_stop="+str(stopPos)+"&strand=1&rettype=fasta"
     response = requests.get(URL)
 
@@ -77,13 +82,13 @@ def fetch_promoter(homolog_dict):
         output  = ""
         for i in intergenic.split('\n')[1:]:
             output += i
-        if len(output) <= 800 and len(output) >= 25:
+        if len(output) <= params["max_length"] and len(output) >= params["min_length"]:
             return output
         else:
-            # print('WARNING: Intergenic region is over 800bp')
+            #st.error("No promoter within promoter parameters found for "+str(genome_id))
             return None
     else:
-        print('FATAL: Bad eFetch request')
+        #st.error("Could not get promoter. Bad eFetch for "+str(genome_id))
         return None
 
          # 800bp cutoff for an inter-operon region. 

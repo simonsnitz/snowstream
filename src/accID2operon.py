@@ -3,6 +3,7 @@ import re
 from pprint import pprint
 import streamlit as st
 import time
+import streamlit as st
 
 #TODO:
 # Return a legit error message for the frontend if an error comes up
@@ -184,7 +185,7 @@ def getOperon(allGenes, index, seq_start, strand):
 
 
 
-
+@st.cache_data(show_spinner=False)
 def acc2operon(homolog_dict):
 
     if "accver" in homolog_dict.keys():

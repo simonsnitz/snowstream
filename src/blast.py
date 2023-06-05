@@ -32,7 +32,7 @@ def accID2sequence(accID: str):
         return None
 
 
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def blast(acc, params):
 
     seq = accID2sequence(acc)

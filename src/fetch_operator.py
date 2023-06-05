@@ -12,17 +12,15 @@ def complement(sequence):
         try:
             complement += compDNA[i]
         except:
-            #print('non standard base found when running complement() function')
             break
     return complement
 
 
 
 
-def findImperfectPalindromes(intergenic, size, winScore, lossScore):
+def findImperfectPalindromes(intergenic, size, winScore, lossScore, sPenalty):
 
-    spacer_penalty = {0:4, 1:4, 2:4, 3:4, 4:4, 5:2, 6:2, 7:0, 8:0, 9:-2, 10:-2, \
-        11:-4, 12:-4, 13:-6, 14:-6, 15:-8, 16:-8, 17:-10, 18:-10, 19:-12, 20:-12}
+    spacer_penalty = sPenalty
 
     IRs = (len(intergenic)+1)-(2*size)
     allScores = []
@@ -40,7 +38,7 @@ def findImperfectPalindromes(intergenic, size, winScore, lossScore):
                         else:
                             score += lossScore
 
-                    score += spacer_penalty[j]
+                    score += spacer_penalty[str(j)]
                     seq = repeat + intergenic[i+size:i+size+j].lower() + complement(compare)[::-1]
                     allScores.append({"seq":seq,"score":score})
 
@@ -57,13 +55,13 @@ def findImperfectPalindromes(intergenic, size, winScore, lossScore):
 
 
 
-def findBestPalindrome(intergenic, shortest, longest, winScore, lossScore):
+def findBestPalindrome(intergenic, shortest, longest, winScore, lossScore, sPenalty):
 
     operators = []
     intergenic = intergenic.upper()
     
     for i in range(shortest, longest):
-        ops = findImperfectPalindromes(intergenic, i, winScore, lossScore)
+        ops = findImperfectPalindromes(intergenic, i, winScore, lossScore, sPenalty)
         if ops != None:
             for j in ops:
                 operators.append(j)
@@ -79,8 +77,9 @@ def findBestPalindrome(intergenic, shortest, longest, winScore, lossScore):
 
 
 
-def findOperatorInIntergenic(intergenic, operator, ext_length=0):
+def findOperatorInIntergenic(intergenic, operator, params):
 
+    ext_length = params["extension_length"]
     operator_length = len(operator)
     
         # This function is needed to extract the ENTIRE aligned region.
@@ -108,13 +107,12 @@ def findOperatorInIntergenic(intergenic, operator, ext_length=0):
 
     try:
         upstr_align, op_align, score, startPos, endPos = \
-            align.localms(intergenic, operator, 2, -0.5, -100, 0)[0]
+            align.localms(intergenic, operator, params["align_match"], params["align_mismatch"], params["gap_open"], params["gap_extend"])[0]
     except:
-        print("WARNING: Regulated sequence alignment failed")
+        #print("WARNING: Regulated sequence alignment failed")
         return None
     
         # Heavily penalizing gap opening avoids errors with downstream data processing, but may miss out on interesting biological features
-        # Returns the aligned operator sequence if a similarity threshold is met. Score threshold (7) should be tuned.
         # Set score cutoff to be 10% of max. Arbitrary, but seems reasonable.
     max_score = 2*operator_length
     score_cutoff = max_score*0.1
@@ -123,7 +121,7 @@ def findOperatorInIntergenic(intergenic, operator, ext_length=0):
         operator = extractOperator(upstr_align, op_align, ext_length)
         return {"operator":operator, "score":score}
     else:
-        print('WARNING: Alignment score is not above cutoff')
+        #print('WARNING: Alignment score is not above cutoff')
         return None
 
 
@@ -206,7 +204,9 @@ def get_consensus_score(operator, consensus_data, ext_length):
 
     # This is the main function
 
-def fetch_operator(homolog_metadata, ext_length=5, **kwargs):
+def fetch_operator(homolog_metadata, params, **kwargs):
+
+    ext_length = params["extension_length"]
 
     acc = homolog_metadata[0]["accession"]
 
@@ -216,20 +216,18 @@ def fetch_operator(homolog_metadata, ext_length=5, **kwargs):
         operators = [{"seq": kwargs.get('known_operator')}]
     else:
 
-            # Iterates the palindrome locater function through multiple relevant scoring parameters
+            # Applies the palindrome locater function through scoring parameters
+        try:
+            ops = [findBestPalindrome(intergenic=regulated_seqs[0], \
+                shortest=params["min_operator_length"], longest=params["max_operator_length"], \
+                    winScore=params["win_score"], lossScore=params["loss_score"], sPenalty=params["spacer_penalty"])][0]
+        except:
+            ops = [findBestPalindrome(intergenic=regulated_seqs[1], \
+                shortest=params["min_operator_length"], longest=params["max_operator_length"], \
+                    winScore=params["win_score"], lossScore=params["loss_score"], sPenalty=params["spacer_penalty"])][0]
         operators = []
-
-        test_params = [{"w":2,"l":-2}, {"w":2,"l":-3}, {"w":2,"l":-4}]
-
-        for i in test_params:
-            try:
-                ops = [findBestPalindrome(intergenic=regulated_seqs[0], \
-                    shortest=5, longest=15, winScore=i["w"], lossScore=i["l"])][0]
-            except:
-                ops = [findBestPalindrome(intergenic=regulated_seqs[1], \
-                    shortest=5, longest=15, winScore=i["w"], lossScore=i["l"])][0]
-            for operator in ops:
-                operators.append(operator)
+        for operator in ops:
+            operators.append(operator)
 
 
 
@@ -251,7 +249,7 @@ def fetch_operator(homolog_metadata, ext_length=5, **kwargs):
         for h in homolog_metadata:
             i = h["promoter"]
             homolog = {}
-            op = findOperatorInIntergenic(i, operator["seq"], ext_length=ext_length)
+            op = findOperatorInIntergenic(i, operator["seq"], params)
             if op != None:
                 homolog["predicted_operator"] =  op["operator"]
                 homolog["align_score"] =  op["score"]
@@ -267,7 +265,7 @@ def fetch_operator(homolog_metadata, ext_length=5, **kwargs):
         consensus_score = get_consensus_score(operator["seq"], consensus, ext_length)
             # Pull out the predicted operator from the original query protein
         opSeq = findOperatorInIntergenic(regulated_seqs[0], \
-            operator["seq"], ext_length=5)
+            operator["seq"], params)
         if opSeq != None:
             operator["seq"] = opSeq["operator"]
 

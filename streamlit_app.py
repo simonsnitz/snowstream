@@ -81,15 +81,69 @@ options1, options2, options3 = options.columns((1,3,1))
 with options2.expander("Advanced options"):
     
     adv_options = st.container()
-    adv1, adv2, adv3 = adv_options.columns(3)
+    blast_container = adv_options.container()
+    blast1, blast2, blast3, blast4 = blast_container.columns((2,1,1,2))
 
-    adv1.subheader("BLAST")
-    ident_cutoff = adv1.number_input(label="Identity cutoff", min_value=30, max_value=90, value=40)
-    cov_cutoff = adv1.number_input(label="Coverage cutoff", min_value=50, max_value=100, value=90)
+    blast1.subheader("BLAST")
+    ident_cutoff = blast2.number_input(label="Identity cutoff", min_value=30, max_value=90, value=40)
+    cov_cutoff = blast3.number_input(label="Coverage cutoff", min_value=50, max_value=100, value=90)
+    blast_container.divider()
 
-params = {
+    promoter_container = adv_options.container()
+    prom1, prom2, prom3, prom4 = promoter_container.columns((2,1,1,2))
+
+    prom1.subheader("Promoter extraction")
+    prom_min_length = prom2.number_input(label="Minimum promoter length", min_value=1, max_value=500, value=25)
+    prom_max_length = prom3.number_input(label="Maximum promoter length", min_value=20, max_value=9000, value=800)
+    promoter_container.divider()
+
+    operator_container = adv_options.container()
+    operator_container.subheader("Operator")
+
+    op1, op2, op3, op4, op5 = operator_container.columns(5)
+    extension_length = op1.number_input(label="Extension length", min_value=0, max_value=10, value=5)
+    win_score = op2.number_input(label="Match score", min_value=0, max_value=10, value=2)
+    loss_score = op3.number_input(label="Mismatch score", min_value=-10, max_value=0, value=-2)
+    min_operator_length = op4.number_input(label="Minimum operator length", min_value=3, max_value=10, value=5)
+    max_operator_length = op5.number_input(label="Maximum operator length", min_value=11, max_value=40, value=15)
+
+
+    spacer_penalty = \
+            [{"0":4, "1":4, "2":4, "3":4, "4":4, "5":2, "6":2, "7":0, "8":0, "9":-2, "10":-2, \
+            "11":-4, "12":-4, "13":-6, "14":-6, "15":-8, "16":-8, "17":-10, "18":-10, "19":-12, "20":-12}]
+
+    operator_container.write("Spacer penalty")
+    penalty = operator_container.data_editor(spacer_penalty)
+
+    align1, align2, align3, align4 = operator_container.columns(4)
+    gap_open = align1.number_input(label="Gap open penalty", min_value=-999, max_value=0, value=-100)
+    gap_extend = align2.number_input(label="Gap extend penalty", min_value=-999, max_value=0, value=0)
+    align_match = align3.number_input(label="Alignment match score", min_value=1, max_value=100, value=2)
+    align_mismatch = align4.number_input(label="Alignment mismatch score", min_value=-100.0, max_value=10.0, value=-0.5)
+
+
+
+blast_params = {
     "ident_cutoff": ident_cutoff,
     "cov_cutoff": cov_cutoff
+}
+
+promoter_params = {
+    "min_length": prom_min_length,
+    "max_length": prom_max_length
+}
+
+operator_params = {
+    "extension_length": extension_length,
+    "win_score": win_score,
+    "loss_score": loss_score,
+    "spacer_penalty": penalty[0],
+    "gap_open": gap_open,
+    "gap_extend": gap_extend,
+    "align_match": align_match,
+    "align_mismatch": align_mismatch,
+    "min_operator_length": min_operator_length,
+    "max_operator_length": max_operator_length,
 }
 
 
@@ -122,14 +176,14 @@ if st.session_state.SUBMITTED:
 
 
         start = time.time()
-        blast_df = blast(acc, params)
+        blast_df = blast(acc, blast_params)
         end = time.time()
 
         if blast_df.empty:
             blast_col.error("No blast file made")
         else:
             blast_col.subheader("BLAST results")
-            blast_col.dataframe(blast_df, hide_index=True)
+            blast_col.dataframe(blast_df)
             blast_col.write("time elapsed: "+str(round(end-start,2))+" seconds")
 
                 #inefficient. I'm converting from a dict to a dataframe, back to a dict.
@@ -158,22 +212,22 @@ if st.session_state.SUBMITTED:
                 prog_value = int(i*prog_bar_increment)
                 prog_bar.progress(prog_value, text=f"Fetching context for homolog {str(i+1)} of {str(len(homolog_dict))} (accession: {homolog_dict[i]['accession']})")
                 homolog_dict[i]["operon"] = acc2operon(homolog_dict[i])
-                homolog_dict[i]["promoter"] = fetch_promoter(homolog_dict[i]["operon"])
+                homolog_dict[i]["promoter"] = fetch_promoter(homolog_dict[i]["operon"], promoter_params)
             
             prog_bar.empty()
          
 
-            operator_dict = fetch_operator(homolog_dict)
+            operator_dict = fetch_operator(homolog_dict, operator_params)
  
 
             # to display with LogoJS
             motif = operator_dict["motif"]
             
             res2.header(operator_dict["consensus_seq"])
-            metric1, metric2, metric3, metric4 = res2.columns(4)
+            metric1, metric2, metric3 = res2.columns(3)
             metric1.metric(label="Consensus score", value=operator_dict["consensus_score"])
-            metric2.metric(label="Number of sequences aligned", value=operator_dict["num_seqs"])
+            metric2.metric(label="Sequences aligned", value=operator_dict["num_seqs"])
 
             homologs_col.subheader("Predicted homolog operators")
-            homologs_col.dataframe(pd.DataFrame(operator_dict["aligned_seqs"]), hide_index=True)
+            homologs_col.dataframe(pd.DataFrame(operator_dict["aligned_seqs"]))
 
