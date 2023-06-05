@@ -99,7 +99,7 @@ with options2.expander("Advanced options"):
     promoter_container.divider()
 
     operator_container = adv_options.container()
-    operator_container.subheader("Operator")
+    operator_container.subheader("Operator identification")
 
     op1, op2, op3, op4, op5 = operator_container.columns(5)
     extension_length = op1.number_input(label="Extension length", min_value=0, max_value=10, value=5)
@@ -182,13 +182,9 @@ with st.form(key='snowprint'):
 # RUN SNOWPRINT
 if st.session_state.SUBMITTED:
 
-    results = st.container()
-    res1, res2, res3 = results.columns(3)
-
-    st.divider()
 
     intermediate = st.container()
-    blast_col, homologs_col = intermediate.columns((1,2))
+    blast_col, coordinates_col, homologs_col = intermediate.columns((1,2,2))
 
 
     with st.spinner("blasting your protein"):
@@ -196,14 +192,12 @@ if st.session_state.SUBMITTED:
 
         start = time.time()
         blast_df = blast(acc, blast_params)
-        end = time.time()
 
         if blast_df.empty:
             blast_col.error("No blast file made")
         else:
             blast_col.subheader("BLAST results")
             blast_col.dataframe(blast_df)
-            blast_col.write("time elapsed: "+str(round(end-start,2))+" seconds")
 
                 #inefficient. I'm converting from a dict to a dataframe, back to a dict.
             homolog_dict = [ 
@@ -215,11 +209,24 @@ if st.session_state.SUBMITTED:
                 for i, row in blast_df.iterrows()
             ]
 
-    with st.spinner("Getting homolog genome coordianates"):
+    with st.spinner("Getting genome coordianates"):
 
-            homolog_dict = get_genome_coordinates(homolog_dict)
+            prog_bar = coordinates_col.progress(0, text="Fetching genome coordinates")
+            prog_bar_increment = 100/int(len(homolog_dict))
+
+            updated_homolog_dict = []
+            for i in range(0, len(homolog_dict)):
+                prog_value = int(i*prog_bar_increment)
+                prog_bar.progress(prog_value, text=f"Fetching context for homolog {str(i+1)} of {str(len(homolog_dict))} (accession: {homolog_dict[i]['accession']})")
+                updated_homolog_dict.append(get_genome_coordinates(homolog_dict[i]))
+
+            prog_bar.empty()
+
             # Remove entries without any genome coordinates
-            homolog_dict = [i for i in homolog_dict if "accver" in i.keys()]
+            homolog_dict = [i for i in updated_homolog_dict if "accver" in i.keys()]
+            coordinates_col.subheader("Genome coordinates")
+            cooridnates_df = pd.DataFrame(homolog_dict).drop(columns=["identity", "coverage"])
+            coordinates_col.dataframe(cooridnates_df)
 
 
     with st.spinner("Extracting predicted operators for each homolog"):
@@ -238,10 +245,23 @@ if st.session_state.SUBMITTED:
                     homolog_dict[i]["promoter"] = None
             
             prog_bar.empty()
+
+            end = time.time()
+            blast_col.write("time elapsed: "+str(round(end-start,2))+" seconds")
          
 
             operator_dict = fetch_operator(homolog_dict, operator_params)
+            # Display extracted promoters
+            homologs_col.subheader("Predicted homolog operators")
+            homologs_col.dataframe(pd.DataFrame(operator_dict["aligned_seqs"]))
  
+
+            st.divider()
+
+
+            results = st.container()
+            results.markdown("<h1 style='text-align: center; color: black;'>Results</h1>", unsafe_allow_html=True)
+            res1, res2, res3 = results.columns(3)
             
             # to display with LogoJS
             motif = operator_dict["motif"]
@@ -249,15 +269,23 @@ if st.session_state.SUBMITTED:
             #color_key = {"A":"#ff5454", "T": "#00bd00", "C": "#54a7ff", "G": "black"}
             color_key = {"A":"red", "T": "green", "C": "blue", "G": "black"}
             for i in motif:
-
                 motif_html += "<span style='color: "+str(color_key[i["base"].upper()])+"; font-size: 400%; display: inline-block; \
                     transform:  translateY("+str(1.25-i["score"]**1.5)+"em)  scaleY("+str(2*i["score"]**3)+") '>"+str(i["base"])+"</span>"
+
             motif_html += "</div>"
             results.markdown(motif_html, unsafe_allow_html=True)
 
 
             con_seq = operator_dict["consensus_seq"]
             # res2.header(con_seq)
+
+
+            metric1, metric2, metric3 = res1.columns(3)
+            metric1.metric(label="Consensus score", value=operator_dict["consensus_score"])
+            metric2.metric(label="Sequences aligned", value=operator_dict["num_seqs"])
+
+            
+            # Create the consensus motif logo
             for i in homolog_dict:
                 if i["promoter"]:
                     [before, after] = re.split(re.escape((con_seq).upper()), i["promoter"])
@@ -272,10 +300,4 @@ if st.session_state.SUBMITTED:
             #st.dataframe(motif)
 
 
-            metric1, metric2, metric3 = res2.columns(3)
-            metric1.metric(label="Consensus score", value=operator_dict["consensus_score"])
-            metric2.metric(label="Sequences aligned", value=operator_dict["num_seqs"])
-
-            homologs_col.subheader("Predicted homolog operators")
-            homologs_col.dataframe(pd.DataFrame(operator_dict["aligned_seqs"]))
 

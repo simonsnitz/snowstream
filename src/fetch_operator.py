@@ -294,12 +294,9 @@ def fetch_operator(homolog_metadata, params):
             homolog = {}
             op = findOperatorInIntergenic(i, operator["seq"], params)
             if op != None:
-                homolog["predicted_operator"] =  op["operator"]
-                homolog["align_score"] =  op["score"]
-                homolog["identity"] = h["identity"]
-                homolog["coverage"] = h["coverage"]
                 homolog["accession"] = h["accession"]
-                #homolog["regulated_seq"] = i
+                homolog["align_score"] =  op["score"]
+                homolog["predicted_operator"] =  op["operator"]
 
                 metrics.append(homolog)
 
@@ -325,6 +322,6 @@ def fetch_operator(homolog_metadata, params):
 
 
     frequency_matrix = generate_frequency_matrix(metrics)
-    st.dataframe(frequency_matrix)
+    #st.dataframe(frequency_matrix)
 
     return operator_data
