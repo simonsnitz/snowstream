@@ -199,9 +199,11 @@ def acc2operon(homolog_dict):
             
             return data
         else:
-            st.error("Could not find regulator for homolog "+str(homolog_dict["accession"]))
+            #st.error("Could not find regulator for homolog "+str(homolog_dict["accession"]))
+            return None
     else:
-        st.error("No data for homolog "+str(homolog_dict["accession"]))
+        #st.error("No data for homolog "+str(homolog_dict["accession"]))
+        return None
 
 
 if __name__ == "__main__":

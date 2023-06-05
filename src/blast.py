@@ -48,6 +48,8 @@ def blast(acc, params):
 
     #diamond_db = "../diamond/diamond/tetr"
     diamond_db = "../diamond/diamond/bHTH"
+
+    st.write(Seq(seq))
     
     subprocess.call(f'diamond blastp -d {diamond_db} -q {query.name} -o {tmp.name} --outfmt 6 {flags} '
                     f' --id {params["ident_cutoff"]} --query-cover {params["cov_cutoff"]} --max-target-seqs 30 >> {log.name} 2>&1' , shell=True)

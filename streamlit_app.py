@@ -71,8 +71,8 @@ head1, head2, head3 = head.columns(3)
 head2.markdown("<h1 style='text-align: center; color: black;'>Snowprint</h1>", unsafe_allow_html=True)
 head2.markdown("<h3 style='text-align: center; color: black;'>Predict a regulator's operator sequence</h3>", unsafe_allow_html=True)
 
-acc = head2.text_input("RefSeq ID", "ACS29497.1")
-
+acc = head2.text_input("RefSeq ID", "AGY77479")
+#acc = head2.text_input("RefSeq ID", "ACS29497.1")
 
 
 # Advanced options
@@ -94,7 +94,7 @@ with options2.expander("Advanced options"):
     prom1, prom2, prom3, prom4 = promoter_container.columns((2,1,1,2))
 
     prom1.subheader("Promoter extraction")
-    prom_min_length = prom2.number_input(label="Minimum promoter length", min_value=1, max_value=500, value=25)
+    prom_min_length = prom2.number_input(label="Minimum promoter length", min_value=1, max_value=500, value=80)
     prom_max_length = prom3.number_input(label="Maximum promoter length", min_value=20, max_value=9000, value=800)
     promoter_container.divider()
 
@@ -231,7 +231,11 @@ if st.session_state.SUBMITTED:
                 prog_value = int(i*prog_bar_increment)
                 prog_bar.progress(prog_value, text=f"Fetching context for homolog {str(i+1)} of {str(len(homolog_dict))} (accession: {homolog_dict[i]['accession']})")
                 homolog_dict[i]["operon"] = acc2operon(homolog_dict[i])
-                homolog_dict[i]["promoter"] = fetch_promoter(homolog_dict[i]["operon"], promoter_params)
+                # Deal with cases where operon fetching fails
+                try:
+                    homolog_dict[i]["promoter"] = fetch_promoter(homolog_dict[i]["operon"], promoter_params)
+                except:
+                    homolog_dict[i]["promoter"] = None
             
             prog_bar.empty()
          
@@ -239,8 +243,21 @@ if st.session_state.SUBMITTED:
             operator_dict = fetch_operator(homolog_dict, operator_params)
  
             
+            # to display with LogoJS
+            motif = operator_dict["motif"]
+            motif_html = "<div>"
+            #color_key = {"A":"#ff5454", "T": "#00bd00", "C": "#54a7ff", "G": "black"}
+            color_key = {"A":"red", "T": "green", "C": "blue", "G": "black"}
+            for i in motif:
+
+                motif_html += "<span style='color: "+str(color_key[i["base"].upper()])+"; font-size: 400%; display: inline-block; \
+                    transform:  translateY("+str(1.25-i["score"]**1.5)+"em)  scaleY("+str(2*i["score"]**3)+") '>"+str(i["base"])+"</span>"
+            motif_html += "</div>"
+            results.markdown(motif_html, unsafe_allow_html=True)
+
+
             con_seq = operator_dict["consensus_seq"]
-            res2.header(con_seq)
+            # res2.header(con_seq)
             for i in homolog_dict:
                 if i["promoter"]:
                     [before, after] = re.split(re.escape((con_seq).upper()), i["promoter"])
@@ -252,8 +269,6 @@ if st.session_state.SUBMITTED:
 
 
 
-            # to display with LogoJS
-            motif = operator_dict["motif"]
             #st.dataframe(motif)
 
 

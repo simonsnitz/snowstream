@@ -1,6 +1,9 @@
 from Bio.pairwise2 import align, format_alignment
 import json
 from pprint import pprint
+import streamlit as st
+import math
+import sys
 
 
 
@@ -202,9 +205,48 @@ def get_consensus_score(operator, consensus_data, ext_length):
 
 
 
+def generate_frequency_matrix(homolog_metadata):
+
+    operators = []
+    try:
+        op_length = len(homolog_metadata[0]["predicted_operator"])
+    except:
+        op_length = len(homolog_metadata[0]["predicted_operator"])
+
+    for homolog in homolog_metadata:
+        op = homolog["predicted_operator"].upper()
+        if len(op) == op_length and op.isalpha() and all(nucleotide in "ATCG" for nucleotide in op):
+            operators.append(op)
+
+    num_ops = len(operators)
+    matrix = []
+
+    for i in range(len(operators[0])):
+        base = [0, 0, 0, 0]
+        for op in operators:
+            if op[i] == "A":
+                base[0] += 1 / num_ops
+            elif op[i] == "C":
+                base[1] += 1 / num_ops
+            elif op[i] == "G":
+                base[2] += 1 / num_ops
+            elif op[i] == "T":
+                base[3] += 1 / num_ops
+        base = [round((x + sys.float_info.epsilon) * 100) / 100 for x in base]
+        matrix.append(base)
+
+    
+    return matrix
+
+
+
+
+
+
+
     # This is the main function
 
-def fetch_operator(homolog_metadata, params, **kwargs):
+def fetch_operator(homolog_metadata, params):
 
     ext_length = params["extension_length"]
 
@@ -214,8 +256,6 @@ def fetch_operator(homolog_metadata, params, **kwargs):
 
     if params["seq_to_align"] != None:
         operators = [{"seq": params["seq_to_align"]}]
-    # if 'known_operator' in kwargs:
-    #     operators = [{"seq": kwargs.get('known_operator')}]
     else:
 
             # Applies the palindrome locater function through scoring parameters
@@ -230,6 +270,7 @@ def fetch_operator(homolog_metadata, params, **kwargs):
         operators = []
         for operator in ops:
             operators.append(operator)
+
 
 
 
@@ -281,5 +322,9 @@ def fetch_operator(homolog_metadata, params, **kwargs):
             operator_data["num_seqs"] = consensus["num_seqs"]
             operator_data["motif"] = consensus["motif_data"]
             operator_data["aligned_seqs"] = metrics
+
+
+    frequency_matrix = generate_frequency_matrix(metrics)
+    st.dataframe(frequency_matrix)
 
     return operator_data
