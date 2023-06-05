@@ -5,6 +5,7 @@ from src.accID2operon import acc2operon
 from src.fetch_promoter import fetch_promoter
 from src.fetch_operator import fetch_operator
 
+import re
 import pandas as pd
 
 import time
@@ -120,6 +121,23 @@ with options2.expander("Advanced options"):
     gap_extend = align2.number_input(label="Gap extend penalty", min_value=-999, max_value=0, value=0)
     align_match = align3.number_input(label="Alignment match score", min_value=1, max_value=100, value=2)
     align_mismatch = align4.number_input(label="Alignment mismatch score", min_value=-100.0, max_value=10.0, value=-0.5)
+    operator_container.divider()
+    
+    selected = operator_container.checkbox("Align an input sequence")
+    if selected:
+        seq_input = operator_container.text_input("Sequence for alignment")
+        if len(seq_input) > 10:
+            if re.match(r'^[ATCGatcg]*$', seq_input):
+                seq_to_align = seq_input
+            else:
+                seq_to_align = None
+                st.error("Sequence must contain only A, T, C, or G characters")
+        else:
+            seq_to_align = None
+            st.error("Sequence must be at least 10 bases long")
+    else:
+        seq_to_align = None
+
 
 
 
@@ -144,6 +162,7 @@ operator_params = {
     "align_mismatch": align_mismatch,
     "min_operator_length": min_operator_length,
     "max_operator_length": max_operator_length,
+    "seq_to_align": seq_to_align
 }
 
 
@@ -219,11 +238,25 @@ if st.session_state.SUBMITTED:
 
             operator_dict = fetch_operator(homolog_dict, operator_params)
  
+            
+            con_seq = operator_dict["consensus_seq"]
+            res2.header(con_seq)
+            for i in homolog_dict:
+                if i["promoter"]:
+                    [before, after] = re.split(re.escape((con_seq).upper()), i["promoter"])
+                    html = "<span style='color: black;'>"+str(before)+"</span>"
+                    html += "<span style='color: red; font-size: 16px'>"+str(con_seq)+"</span>"
+                    html += "<span style='color: black;'>"+str(after)+"</span>"
+                    res2.markdown(html, unsafe_allow_html=True)
+                    break
+
+
 
             # to display with LogoJS
             motif = operator_dict["motif"]
-            
-            res2.header(operator_dict["consensus_seq"])
+            #st.dataframe(motif)
+
+
             metric1, metric2, metric3 = res2.columns(3)
             metric1.metric(label="Consensus score", value=operator_dict["consensus_score"])
             metric2.metric(label="Sequences aligned", value=operator_dict["num_seqs"])

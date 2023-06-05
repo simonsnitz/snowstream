@@ -212,8 +212,10 @@ def fetch_operator(homolog_metadata, params, **kwargs):
 
     regulated_seqs = [h["promoter"] for h in homolog_metadata]
 
-    if 'known_operator' in kwargs:
-        operators = [{"seq": kwargs.get('known_operator')}]
+    if params["seq_to_align"] != None:
+        operators = [{"seq": params["seq_to_align"]}]
+    # if 'known_operator' in kwargs:
+    #     operators = [{"seq": kwargs.get('known_operator')}]
     else:
 
             # Applies the palindrome locater function through scoring parameters
