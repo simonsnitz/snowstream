@@ -229,7 +229,7 @@ if st.session_state.SUBMITTED:
 
 
     intermediate = st.container()
-    blast_col, coordinates_col, homologs_col = intermediate.columns((1,2,2))
+    blast_col, coordinates_col, homologs_col = intermediate.columns((1.3,2,2.2))
 
 
     with st.spinner("blasting your protein"):
@@ -247,9 +247,9 @@ if st.session_state.SUBMITTED:
                 #inefficient. I'm converting from a dict to a dataframe, back to a dict.
             homolog_dict = [ 
                 {
-                    "accession": row["sseqid"],
-                    "identity": row["pident"],
-                    "coverage": row["qcovhsp"]
+                    "Uniprot Id": row["Uniprot Id"],
+                    "identity": row["Identity"],
+                    "coverage": row["Coverage"]
                 }
                 for i, row in blast_df.iterrows()
             ]
@@ -269,7 +269,7 @@ if st.session_state.SUBMITTED:
             updated_homolog_dict = []
             for i in range(0, len(homolog_dict)):
                 prog_value = int(i*prog_bar_increment)
-                prog_bar.progress(prog_value, text=f"Fetching context for homolog {str(i+1)} of {str(len(homolog_dict))} (accession: {homolog_dict[i]['accession']})")
+                prog_bar.progress(prog_value, text=f"Fetching context for homolog {str(i+1)} of {str(len(homolog_dict))} (accession: {homolog_dict[i]['Uniprot Id']})")
                 updated_homolog_dict.append(get_genome_coordinates(homolog_dict[i]))
 
             prog_bar.empty()
@@ -277,7 +277,7 @@ if st.session_state.SUBMITTED:
             homolog_dict = [i for i in updated_homolog_dict if i != None]
         
         
-        homolog_dict = [i for i in homolog_dict if "accver" in i.keys()]
+        homolog_dict = [i for i in homolog_dict if "Genome" in i.keys()]
         coordinates_col.subheader("Genome coordinates")
         cooridnates_df = pd.DataFrame(homolog_dict).drop(columns=["identity", "coverage"])
         coordinates_col.dataframe(cooridnates_df)
@@ -290,7 +290,7 @@ if st.session_state.SUBMITTED:
 
             for i in range(0, len(homolog_dict)):
                 prog_value = int(i*prog_bar_increment)
-                prog_bar.progress(prog_value, text=f"Fetching context for homolog {str(i+1)} of {str(len(homolog_dict))} (accession: {homolog_dict[i]['accession']})")
+                prog_bar.progress(prog_value, text=f"Fetching context for homolog {str(i+1)} of {str(len(homolog_dict))} (accession: {homolog_dict[i]['Uniprot Id']})")
                 homolog_dict[i]["operon"] = acc2operon(homolog_dict[i])
                 # Deal with cases where operon fetching fails
                 try:
@@ -344,7 +344,7 @@ if st.session_state.SUBMITTED:
 
 
             metric1, metric2 = res1.columns(2)
-            metric1.metric(label="Consensus score", value=operator_dict["consensus_score"])
+            metric1.metric(label="Conservation score", value=operator_dict["consensus_score"])
             metric2.metric(label="Sequences aligned", value=operator_dict["num_seqs"])
 
             

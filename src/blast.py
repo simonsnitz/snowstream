@@ -67,6 +67,12 @@ def blast(acc, params):
         inDf['sseqid'] = inDf['sseqid'].str.split("|", n=2, expand=True)[1]
     except (ValueError, KeyError):
         pass
+
+    inDf.rename(columns= {'sseqid': 'Uniprot Id'}, inplace=True)
+    inDf.rename(columns= {'pident': 'Identity'}, inplace=True)
+    inDf.rename(columns= {'qcovhsp': 'Coverage'}, inplace=True)
+
+
     
 
     return inDf

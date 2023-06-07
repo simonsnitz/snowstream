@@ -188,14 +188,14 @@ def getOperon(allGenes, index, seq_start, strand):
 @st.cache_data(show_spinner=False)
 def acc2operon(homolog_dict):
 
-    if "accver" in homolog_dict.keys():
-        genes, index = getGenes(homolog_dict["accver"], int(homolog_dict["start"]), int(homolog_dict["stop"]))
+    if "Genome" in homolog_dict.keys():
+        genes, index = getGenes(homolog_dict["Genome"], int(homolog_dict["Start"]), int(homolog_dict["Stop"]))
 
         if index != None:
             reg = fasta2MetaData(genes[index])
 
             operon, regIndex = getOperon(genes, index, reg['start'], reg['direction'])
-            data = {"operon": operon, "protein_index": regIndex, "genome": homolog_dict["accver"] }
+            data = {"operon": operon, "protein_index": regIndex, "genome": homolog_dict["Genome"] }
             
             return data
         else:

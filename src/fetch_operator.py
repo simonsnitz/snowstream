@@ -135,8 +135,8 @@ def findOperatorInIntergenic(intergenic, operator, params):
 def getConsensus(metrics):
     
         # Filter by identity and by alignment score. Some alignments from ~80% homologs have crap scores
-    allOperators = [ i["predicted_operator"] for i in metrics 
-             if i["align_score"] != 0 ]
+    allOperators = [ i["Predicted operator"] for i in metrics 
+             if i["Align score"] != 0 ]
 
     num_seqs = len(allOperators)
 	    # Initialize list of dictionaries
@@ -210,12 +210,12 @@ def generate_frequency_matrix(homolog_metadata):
 
     operators = []
     try:
-        op_length = len(homolog_metadata[0]["predicted_operator"])
+        op_length = len(homolog_metadata[0]["Predicted operator"])
     except:
-        op_length = len(homolog_metadata[0]["predicted_operator"])
+        op_length = len(homolog_metadata[1]["Predicted operator"])
 
     for homolog in homolog_metadata:
-        op = homolog["predicted_operator"].upper()
+        op = homolog["Predicted operator"].upper()
         if len(op) == op_length and op.isalpha() and all(nucleotide in "ATCG" for nucleotide in op):
             operators.append(op)
 
@@ -250,7 +250,7 @@ def generate_frequency_matrix(homolog_metadata):
 def fetch_operator(homolog_metadata, params):
 
     ext_length = params["extension_length"]
-    acc = homolog_metadata[0]["accession"]
+    acc = homolog_metadata[0]["Uniprot Id"]
     regulated_seqs = [h["promoter"] for h in homolog_metadata]
 
 
@@ -284,7 +284,7 @@ def fetch_operator(homolog_metadata, params):
 
         # Initialize output data
     operator_data = { 
-        "accession": str(acc),
+        "Uniprot Id": str(acc),
         "aligned_seq": "None",
         "num_seqs": "None",
         "consensus_score": 0,
@@ -303,9 +303,9 @@ def fetch_operator(homolog_metadata, params):
             homolog = {}
             op = findOperatorInIntergenic(i, operator["seq"], params)
             if op != None:
-                homolog["accession"] = h["accession"]
-                homolog["align_score"] =  op["score"]
-                homolog["predicted_operator"] =  op["operator"]
+                homolog["Uniprot Id"] = h["Uniprot Id"]
+                homolog["Predicted operator"] =  op["operator"]
+                homolog["Align score"] =  op["score"]
 
                 metrics.append(homolog)
 
