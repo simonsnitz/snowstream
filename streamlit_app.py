@@ -98,7 +98,7 @@ with st.sidebar:
 
     st.divider()
 
-    st.header("Advanced options")
+    st.markdown("<h1 style='text-align: center; color: black;'>Advanced options</h1>", unsafe_allow_html=True)
 
     adv_options = st.container()
     blast_container1 = adv_options.container()
@@ -121,31 +121,20 @@ with st.sidebar:
         ("batch", "individually"))
     promoter_container2.divider()
 
-    operator_container1 = adv_options.container()
-    operator_container2 = adv_options.container()
-    operator_container1.subheader("Promoter alignment")
-
-    op1, op2 = operator_container2.columns(2)
-    extension_length = op1.number_input(label="Extension length", min_value=0, max_value=10, value=5)
 
 
-    align1, align2 = operator_container2.columns(2)
-    gap_open = align1.number_input(label="Gap open penalty", min_value=-999, max_value=0, value=-100)
-    gap_extend = align2.number_input(label="Gap extend penalty", min_value=-999, max_value=0, value=0)
-    align_match = align1.number_input(label="Alignment match", min_value=1, max_value=100, value=2)
-    align_mismatch = align2.number_input(label="Alignment mismatch", min_value=-100.0, max_value=10.0, value=-0.5)
-    operator_container2.divider()
 
-    operator_container2.subheader("Search method")
+    search_method_container = adv_options.container()
+
+    # SEARCH METHOD
+    search_method_container.subheader("Search method")
     
-    search_method = operator_container2.radio("How should conservation be analyzed?", \
+    search_method = search_method_container.radio("How should conservation be analyzed?", \
         ("Align an input sequence", "Scan entire promoter region", "Look for inverted repeats"), index=2)
-
-
 
     # Extra options when aligning an input sequence ...
     if search_method == "Align an input sequence":
-        seq_input = operator_container2.text_input("Sequence for alignment")
+        seq_input = search_method_container.text_input("Sequence for alignment")
         if len(seq_input) > 10:
             if re.match(r'^[ATCGatcg]*$', seq_input):
                 seq_to_align = seq_input
@@ -158,11 +147,10 @@ with st.sidebar:
     else:
         seq_to_align = None
 
-
     # Extra options when searching for inverted repeats ...
     if search_method == "Look for inverted repeats":
-        op_container3 = st.container()
-        ir_option1, ir_option2 = op_container3.columns(2)
+        ir_container = adv_options.container()
+        ir_option1, ir_option2 = ir_container.columns(2)
         win_score = ir_option1.number_input(label="Match score", min_value=0, max_value=10, value=2)
         loss_score = ir_option2.number_input(label="Mismatch score", min_value=-10, max_value=0, value=-2)
         min_operator_length = ir_option1.number_input(label="Min operator length", min_value=3, max_value=10, value=5)
@@ -170,10 +158,29 @@ with st.sidebar:
         spacer_penalty = \
             [{"0":4, "1":4, "2":4, "3":4, "4":4, "5":2, "6":2, "7":0, "8":0, "9":-2, "10":-2, \
             "11":-4, "12":-4, "13":-6, "14":-6, "15":-8, "16":-8, "17":-10, "18":-10, "19":-12, "20":-12}]
-        operator_container2.write("Spacer penalty")
-        penalty = operator_container2.data_editor(spacer_penalty)
+        search_method_container.write("Spacer penalty")
+        penalty = search_method_container.data_editor(spacer_penalty)
+        ir_container.divider()
     else:
         win_score, loss_score, min_operator_length, max_operator_length, spacer_penalty, penalty = None, None, None, None, None, [None]
+        search_method_container.divider()
+
+    
+    # PROMOTER ALIGNEMNT
+
+    promoter_alignement_container = adv_options.container()
+    promoter_alignement_container.subheader("Promoter alignment")
+
+    op1, op2 = promoter_alignement_container.columns(2)
+    extension_length = op1.number_input(label="Extension length", min_value=0, max_value=10, value=5)
+
+
+    align1, align2 = promoter_alignement_container.columns(2)
+    gap_open = align1.number_input(label="Gap open penalty", min_value=-999, max_value=0, value=-100)
+    gap_extend = align2.number_input(label="Gap extend penalty", min_value=-999, max_value=0, value=0)
+    align_match = align1.number_input(label="Alignment match", min_value=1, max_value=100, value=2)
+    align_mismatch = align2.number_input(label="Alignment mismatch", min_value=-100.0, max_value=10.0, value=-0.5)
+
 
 
 
@@ -292,9 +299,6 @@ if st.session_state.SUBMITTED:
                     homolog_dict[i]["promoter"] = None
             
             prog_bar.empty()
-
-            end = time.time()
-            blast_col.write("time elapsed: "+str(round(end-start,2))+" seconds")
          
 
             operator_dict = fetch_operator(homolog_dict, operator_params)
@@ -306,9 +310,16 @@ if st.session_state.SUBMITTED:
             st.divider()
 
 
+
+
+
+
+            #### RESULTS ####
+
+
             results = st.container()
             results.markdown("<h1 style='text-align: center; color: black;'>Results</h1>", unsafe_allow_html=True)
-            res1, res2, res3 = results.columns(3)
+            res1, res2 = results.columns((1,2.5))
             
 
 
@@ -324,24 +335,26 @@ if st.session_state.SUBMITTED:
 
 
             motif_html += "</div>"
+            results.markdown("Consensus sequence")
+                # This is returning the native promoter seq, not the consensus seq
+            consensus_seq = operator_dict["consensus_seq"]
+            results.markdown("<p style='font-size: 32px'>"+consensus_seq+"</p>", unsafe_allow_html=True)
+            results.markdown("Conservation motif logo")
             results.markdown(motif_html, unsafe_allow_html=True)
 
 
-            con_seq = operator_dict["consensus_seq"]
-            # res2.header(con_seq)
-
-
-            metric1, metric2, metric3 = res1.columns(3)
+            metric1, metric2 = res1.columns(2)
             metric1.metric(label="Consensus score", value=operator_dict["consensus_score"])
             metric2.metric(label="Sequences aligned", value=operator_dict["num_seqs"])
 
             
             # Show where the predicted operator is located within the native promoter
+            res2.markdown("Predicted promoter region")
             for i in homolog_dict:
                 if i["promoter"]:
-                    [before, after] = re.split(re.escape((con_seq).upper()), i["promoter"])
+                    [before, after] = re.split(re.escape((operator_dict["native_operator"]).upper()), i["promoter"])
                     html = "<span style='color: black;'>"+str(before)+"</span>"
-                    html += "<span style='color: red; font-size: 16px'>"+str(con_seq)+"</span>"
+                    html += "<span style='color: red; font-size: 16px'>"+str(operator_dict["native_operator"])+"</span>"
                     html += "<span style='color: black;'>"+str(after)+"</span>"
                     res2.markdown(html, unsafe_allow_html=True)
                     break

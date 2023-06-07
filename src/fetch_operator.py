@@ -319,13 +319,16 @@ def fetch_operator(homolog_metadata, params):
         if opSeq != None:
             operator["seq"] = opSeq["operator"]
 
+        consensus_seq = "".join(i["base"] for i in consensus["motif_data"])
+
         # Warning: Only the CONSENSUS SCORE is used to identify the 
             # best operator. This should also incorporate the
             # NUMBER OF ALIGNMENTS as a metric to make this decision.
 
         if consensus_score > operator_data["consensus_score"]:
             operator_data["consensus_score"] = consensus_score
-            operator_data["consensus_seq"] = operator["seq"]
+            operator_data["native_operator"] = operator["seq"]
+            operator_data["consensus_seq"] = consensus_seq
             operator_data["num_seqs"] = consensus["num_seqs"]
             operator_data["motif"] = consensus["motif_data"]
             operator_data["aligned_seqs"] = metrics
