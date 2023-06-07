@@ -123,22 +123,11 @@ with st.sidebar:
 
     operator_container1 = adv_options.container()
     operator_container2 = adv_options.container()
-    operator_container1.subheader("Operator identification")
+    operator_container1.subheader("Promoter alignment")
 
     op1, op2 = operator_container2.columns(2)
     extension_length = op1.number_input(label="Extension length", min_value=0, max_value=10, value=5)
-    win_score = op1.number_input(label="Match score", min_value=0, max_value=10, value=2)
-    loss_score = op2.number_input(label="Mismatch score", min_value=-10, max_value=0, value=-2)
-    min_operator_length = op1.number_input(label="Min operator length", min_value=3, max_value=10, value=5)
-    max_operator_length = op2.number_input(label="Max operator length", min_value=11, max_value=40, value=15)
 
-
-    spacer_penalty = \
-            [{"0":4, "1":4, "2":4, "3":4, "4":4, "5":2, "6":2, "7":0, "8":0, "9":-2, "10":-2, \
-            "11":-4, "12":-4, "13":-6, "14":-6, "15":-8, "16":-8, "17":-10, "18":-10, "19":-12, "20":-12}]
-
-    operator_container2.write("Spacer penalty")
-    penalty = operator_container2.data_editor(spacer_penalty)
 
     align1, align2 = operator_container2.columns(2)
     gap_open = align1.number_input(label="Gap open penalty", min_value=-999, max_value=0, value=-100)
@@ -147,12 +136,14 @@ with st.sidebar:
     align_mismatch = align2.number_input(label="Alignment mismatch", min_value=-100.0, max_value=10.0, value=-0.5)
     operator_container2.divider()
 
-    operator_container2.title("Search method")
+    operator_container2.subheader("Search method")
     
     search_method = operator_container2.radio("How should conservation be analyzed?", \
         ("Align an input sequence", "Scan entire promoter region", "Look for inverted repeats"), index=2)
 
-    # selected = operator_container2.checkbox("Align an input sequence")
+
+
+    # Extra options when aligning an input sequence ...
     if search_method == "Align an input sequence":
         seq_input = operator_container2.text_input("Sequence for alignment")
         if len(seq_input) > 10:
@@ -168,7 +159,21 @@ with st.sidebar:
         seq_to_align = None
 
 
-
+    # Extra options when searching for inverted repeats ...
+    if search_method == "Look for inverted repeats":
+        op_container3 = st.container()
+        ir_option1, ir_option2 = op_container3.columns(2)
+        win_score = ir_option1.number_input(label="Match score", min_value=0, max_value=10, value=2)
+        loss_score = ir_option2.number_input(label="Mismatch score", min_value=-10, max_value=0, value=-2)
+        min_operator_length = ir_option1.number_input(label="Min operator length", min_value=3, max_value=10, value=5)
+        max_operator_length = ir_option2.number_input(label="Max operator length", min_value=11, max_value=40, value=15)
+        spacer_penalty = \
+            [{"0":4, "1":4, "2":4, "3":4, "4":4, "5":2, "6":2, "7":0, "8":0, "9":-2, "10":-2, \
+            "11":-4, "12":-4, "13":-6, "14":-6, "15":-8, "16":-8, "17":-10, "18":-10, "19":-12, "20":-12}]
+        operator_container2.write("Spacer penalty")
+        penalty = operator_container2.data_editor(spacer_penalty)
+    else:
+        win_score, loss_score, min_operator_length, max_operator_length, spacer_penalty, penalty = None, None, None, None, None, [None]
 
 
 
