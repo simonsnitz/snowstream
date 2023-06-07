@@ -21,6 +21,8 @@ def uniprot2EMBL(uniprotID):
 
 
 
+
+
 @st.cache_data(show_spinner=False)
 def get_genome_coordinates(homolog_dict_item):
 
@@ -50,9 +52,56 @@ def get_genome_coordinates(homolog_dict_item):
             return homolog_dict_item
 
         else:
-            st.error("proteins returned and number of homologs does not match")
+            st.error("ProteinList is not in IPGReport for "+str(homolog_dict_item['EMBL']))
     else:
-        st.error('WARNING: eFetch API request failed')
+        st.error('WARNING: get_genome_coordinates eFetch request failed for '+str(homolog_dict_item['EMBL']))
+
+
+
+
+@st.cache_data(show_spinner=False)
+def get_genome_coordinates_batch(homolog_dict):
+
+    for i in homolog_dict:
+        i["EMBL"] = uniprot2EMBL(i["accession"])
+    embl_acc_list = [i["EMBL"] for i in homolog_dict]
+    embl_string = "".join(i+"," for i in embl_acc_list)[:-1]
+    
+
+    response = requests.get('https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&id='+embl_string+'&rettype=ipg')
+    if response.ok:
+        parsed = xmltodict.parse(response.text)
+        proteins = parsed["IPGReportSet"]["IPGReport"]
+
+        if len(proteins) == len(homolog_dict):
+
+            for i in range(0,len(proteins)):
+
+                if "ProteinList" in proteins[i].keys():
+                    protein = proteins[i]["ProteinList"]["Protein"]
+                    if isinstance(protein, list):
+                        protein = protein[0]
+                    CDS = protein["CDSList"]["CDS"]
+                        #CDS is a list if there is more than 1 CDS returned, otherwise it's a dictionary
+                    if isinstance(CDS, list):
+                        CDS = CDS[0]
+
+                    homolog_dict[i]["accver"] = CDS["@accver"]
+                    homolog_dict[i]["start"] = CDS["@start"]
+                    homolog_dict[i]["stop"] = CDS["@stop"]
+                    homolog_dict[i]["strand"] = CDS["@strand"]              
+
+                else:
+                    st.error("ProteinList is not in IPGReport")
+
+            return homolog_dict
+
+        else:
+            print("number of homologs doesn't match number of genome coordinates returned")
+    else:
+        st.error('WARNING: get_genome_coordinates eFetch request failed')
+
+
 
 
 if __name__ == "__main__":

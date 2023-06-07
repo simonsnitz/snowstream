@@ -1,6 +1,6 @@
 import streamlit as st
 from src.blast import blast
-from src.get_genome_coordinates import get_genome_coordinates
+from src.get_genome_coordinates import get_genome_coordinates, get_genome_coordinates_batch
 from src.accID2operon import acc2operon
 from src.fetch_promoter import fetch_promoter
 from src.fetch_operator import fetch_operator
@@ -117,6 +117,8 @@ with st.sidebar:
     promoter_container1.subheader("Promoter extraction")
     prom_min_length = prom1.number_input(label="Min promoter length", min_value=1, max_value=500, value=80)
     prom_max_length = prom2.number_input(label="Max promoter length", min_value=20, max_value=9000, value=800)
+    get_coordinates_method = prom1.radio("How should genome coordinates be fetched?", \
+        ("batch", "individually"))
     promoter_container2.divider()
 
     operator_container1 = adv_options.container()
@@ -242,6 +244,13 @@ if st.session_state.SUBMITTED:
 
     with st.spinner("Getting genome coordianates"):
 
+        if get_coordinates_method == "batch":
+            homolog_dict = get_genome_coordinates_batch(homolog_dict)
+            homolog_dict = [i for i in homolog_dict if i != None]
+
+        
+        elif get_coordinates_method == "individually":
+
             prog_bar = coordinates_col.progress(0, text="Fetching genome coordinates")
             prog_bar_increment = 100/int(len(homolog_dict))
 
@@ -252,14 +261,14 @@ if st.session_state.SUBMITTED:
                 updated_homolog_dict.append(get_genome_coordinates(homolog_dict[i]))
 
             prog_bar.empty()
-
             # Remove entries without any genome coordinates
             homolog_dict = [i for i in updated_homolog_dict if i != None]
-            homolog_dict = [i for i in homolog_dict if "accver" in i.keys()]
-
-            coordinates_col.subheader("Genome coordinates")
-            cooridnates_df = pd.DataFrame(homolog_dict).drop(columns=["identity", "coverage"])
-            coordinates_col.dataframe(cooridnates_df)
+        
+        
+        homolog_dict = [i for i in homolog_dict if "accver" in i.keys()]
+        coordinates_col.subheader("Genome coordinates")
+        cooridnates_df = pd.DataFrame(homolog_dict).drop(columns=["identity", "coverage"])
+        coordinates_col.dataframe(cooridnates_df)
 
 
     with st.spinner("Extracting predicted operators for each homolog"):
