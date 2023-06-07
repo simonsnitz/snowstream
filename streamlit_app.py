@@ -79,53 +79,80 @@ acc = head2.text_input("RefSeq ID", "AGY77479")
 options = st.container()
 options1, options2, options3 = options.columns((1,3,1))
 
-with options2.expander("Advanced options"):
+
+
+# Side bar
+with st.sidebar:
     
+    st.write("Prokaryotic transcription factors can be repurposed as chemical measurement tools for synthetic biology.")
+    
+    st.write("To repurpose a transcription factor, the specific sequence of DNA it binds to must be determined.")
+
+    st.write("Snowprint predicts transcription factor : DNA interactions by analyzing conservation patterns in the local genetic context.")
+
+    st.write("Twitter / Email / GitHub / Paper links")
+
+    st.write("cite the bioRxiv paper")
+
+    st.write("acknowledge funding agencies")
+
+    st.divider()
+
+    st.header("Advanced options")
+
     adv_options = st.container()
-    blast_container = adv_options.container()
-    blast1, blast2, blast3, blast4 = blast_container.columns((2,1,1,2))
+    blast_container1 = adv_options.container()
+    blast_container2 = adv_options.container()
+    blast1, blast2 = blast_container2.columns(2)
 
-    blast1.subheader("BLAST")
-    ident_cutoff = blast2.number_input(label="Identity cutoff", min_value=30, max_value=90, value=40)
-    cov_cutoff = blast3.number_input(label="Coverage cutoff", min_value=50, max_value=100, value=90)
-    blast_container.divider()
+    blast_container1.subheader("BLAST")
+    ident_cutoff = blast1.number_input(label="Identity cutoff", min_value=30, max_value=90, value=40)
+    cov_cutoff = blast2.number_input(label="Coverage cutoff", min_value=50, max_value=100, value=90)
+    blast_container2.divider()
 
-    promoter_container = adv_options.container()
-    prom1, prom2, prom3, prom4 = promoter_container.columns((2,1,1,2))
+    promoter_container1 = adv_options.container()
+    promoter_container2 = adv_options.container()
+    prom1, prom2 = promoter_container2.columns(2)
 
-    prom1.subheader("Promoter extraction")
-    prom_min_length = prom2.number_input(label="Minimum promoter length", min_value=1, max_value=500, value=80)
-    prom_max_length = prom3.number_input(label="Maximum promoter length", min_value=20, max_value=9000, value=800)
-    promoter_container.divider()
+    promoter_container1.subheader("Promoter extraction")
+    prom_min_length = prom1.number_input(label="Min promoter length", min_value=1, max_value=500, value=80)
+    prom_max_length = prom2.number_input(label="Max promoter length", min_value=20, max_value=9000, value=800)
+    promoter_container2.divider()
 
-    operator_container = adv_options.container()
-    operator_container.subheader("Operator identification")
+    operator_container1 = adv_options.container()
+    operator_container2 = adv_options.container()
+    operator_container1.subheader("Operator identification")
 
-    op1, op2, op3, op4, op5 = operator_container.columns(5)
+    op1, op2 = operator_container2.columns(2)
     extension_length = op1.number_input(label="Extension length", min_value=0, max_value=10, value=5)
-    win_score = op2.number_input(label="Match score", min_value=0, max_value=10, value=2)
-    loss_score = op3.number_input(label="Mismatch score", min_value=-10, max_value=0, value=-2)
-    min_operator_length = op4.number_input(label="Minimum operator length", min_value=3, max_value=10, value=5)
-    max_operator_length = op5.number_input(label="Maximum operator length", min_value=11, max_value=40, value=15)
+    win_score = op1.number_input(label="Match score", min_value=0, max_value=10, value=2)
+    loss_score = op2.number_input(label="Mismatch score", min_value=-10, max_value=0, value=-2)
+    min_operator_length = op1.number_input(label="Min operator length", min_value=3, max_value=10, value=5)
+    max_operator_length = op2.number_input(label="Max operator length", min_value=11, max_value=40, value=15)
 
 
     spacer_penalty = \
             [{"0":4, "1":4, "2":4, "3":4, "4":4, "5":2, "6":2, "7":0, "8":0, "9":-2, "10":-2, \
             "11":-4, "12":-4, "13":-6, "14":-6, "15":-8, "16":-8, "17":-10, "18":-10, "19":-12, "20":-12}]
 
-    operator_container.write("Spacer penalty")
-    penalty = operator_container.data_editor(spacer_penalty)
+    operator_container2.write("Spacer penalty")
+    penalty = operator_container2.data_editor(spacer_penalty)
 
-    align1, align2, align3, align4 = operator_container.columns(4)
+    align1, align2 = operator_container2.columns(2)
     gap_open = align1.number_input(label="Gap open penalty", min_value=-999, max_value=0, value=-100)
     gap_extend = align2.number_input(label="Gap extend penalty", min_value=-999, max_value=0, value=0)
-    align_match = align3.number_input(label="Alignment match score", min_value=1, max_value=100, value=2)
-    align_mismatch = align4.number_input(label="Alignment mismatch score", min_value=-100.0, max_value=10.0, value=-0.5)
-    operator_container.divider()
+    align_match = align1.number_input(label="Alignment match", min_value=1, max_value=100, value=2)
+    align_mismatch = align2.number_input(label="Alignment mismatch", min_value=-100.0, max_value=10.0, value=-0.5)
+    operator_container2.divider()
+
+    operator_container2.title("Search method")
     
-    selected = operator_container.checkbox("Align an input sequence")
-    if selected:
-        seq_input = operator_container.text_input("Sequence for alignment")
+    search_method = operator_container2.radio("How should conservation be analyzed?", \
+        ("Align an input sequence", "Scan entire promoter region", "Look for inverted repeats"), index=2)
+
+    # selected = operator_container2.checkbox("Align an input sequence")
+    if search_method == "Align an input sequence":
+        seq_input = operator_container2.text_input("Sequence for alignment")
         if len(seq_input) > 10:
             if re.match(r'^[ATCGatcg]*$', seq_input):
                 seq_to_align = seq_input
@@ -137,6 +164,9 @@ with options2.expander("Advanced options"):
             st.error("Sequence must be at least 10 bases long")
     else:
         seq_to_align = None
+
+
+
 
 
 
@@ -162,7 +192,8 @@ operator_params = {
     "align_mismatch": align_mismatch,
     "min_operator_length": min_operator_length,
     "max_operator_length": max_operator_length,
-    "seq_to_align": seq_to_align
+    "seq_to_align": seq_to_align,
+    "search_method": search_method
 }
 
 
@@ -223,7 +254,9 @@ if st.session_state.SUBMITTED:
             prog_bar.empty()
 
             # Remove entries without any genome coordinates
-            homolog_dict = [i for i in updated_homolog_dict if "accver" in i.keys()]
+            homolog_dict = [i for i in updated_homolog_dict if i != None]
+            homolog_dict = [i for i in homolog_dict if "accver" in i.keys()]
+
             coordinates_col.subheader("Genome coordinates")
             cooridnates_df = pd.DataFrame(homolog_dict).drop(columns=["identity", "coverage"])
             coordinates_col.dataframe(cooridnates_df)
@@ -263,14 +296,18 @@ if st.session_state.SUBMITTED:
             results.markdown("<h1 style='text-align: center; color: black;'>Results</h1>", unsafe_allow_html=True)
             res1, res2, res3 = results.columns(3)
             
-            # to display with LogoJS
+
+
+            # Create the consensus motif logo
             motif = operator_dict["motif"]
             motif_html = "<div>"
-            #color_key = {"A":"#ff5454", "T": "#00bd00", "C": "#54a7ff", "G": "black"}
-            color_key = {"A":"red", "T": "green", "C": "blue", "G": "black"}
+            #color_key = {"A":"#ff5454", "T": "#00bd00", "C": "#54a7ff", "G": "yellow"}
+            color_key = {"A":"red", "T": "green", "C": "blue", "G": "#fcba03"}
             for i in motif:
-                motif_html += "<span style='color: "+str(color_key[i["base"].upper()])+"; font-size: 400%; display: inline-block; \
-                    transform:  translateY("+str(1.25-i["score"]**1.5)+"em)  scaleY("+str(2*i["score"]**3)+") '>"+str(i["base"])+"</span>"
+                motif_html += "<span style='color: "+str(color_key[i["base"].upper()])+"; font-size: 400%; font-weight: 550;display: inline-block; \
+                    transform:  translateY("+str(1.25-i["score"]**3)+"em)  scaleY("+str(3*i["score"]**3)+") '>"+str(i["base"])+"</span>"
+                    #transform:  translateY("+str(1.25-i["score"]**1.5)+"em)  scaleY("+str(2*i["score"]**3)+") '>"+str(i["base"])+"</span>"
+
 
             motif_html += "</div>"
             results.markdown(motif_html, unsafe_allow_html=True)
@@ -285,7 +322,7 @@ if st.session_state.SUBMITTED:
             metric2.metric(label="Sequences aligned", value=operator_dict["num_seqs"])
 
             
-            # Create the consensus motif logo
+            # Show where the predicted operator is located within the native promoter
             for i in homolog_dict:
                 if i["promoter"]:
                     [before, after] = re.split(re.escape((con_seq).upper()), i["promoter"])

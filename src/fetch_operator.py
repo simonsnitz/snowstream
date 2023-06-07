@@ -4,6 +4,7 @@ from pprint import pprint
 import streamlit as st
 import math
 import sys
+from pyfamsa import Aligner, Sequence
 
 
 
@@ -249,32 +250,39 @@ def generate_frequency_matrix(homolog_metadata):
 def fetch_operator(homolog_metadata, params):
 
     ext_length = params["extension_length"]
-
     acc = homolog_metadata[0]["accession"]
-
     regulated_seqs = [h["promoter"] for h in homolog_metadata]
 
-    if params["seq_to_align"] != None:
-        operators = [{"seq": params["seq_to_align"]}]
-    else:
 
-            # Applies the palindrome locater function through scoring parameters
-        try:
-            ops = [findBestPalindrome(intergenic=regulated_seqs[0], \
-                shortest=params["min_operator_length"], longest=params["max_operator_length"], \
-                    winScore=params["win_score"], lossScore=params["loss_score"], sPenalty=params["spacer_penalty"])][0]
-        except:
-            ops = [findBestPalindrome(intergenic=regulated_seqs[1], \
-                shortest=params["min_operator_length"], longest=params["max_operator_length"], \
-                    winScore=params["win_score"], lossScore=params["loss_score"], sPenalty=params["spacer_penalty"])][0]
+    # Chooses method for conservation analysis
+
+        # Align an input sequence
+    if params["search_method"] == "Align an input sequence":
+        operators = [{"seq": params["seq_to_align"]}]
+    
+        # Scan 24 base pair chunks within the native promoter
+    elif params["search_method"] == "Scan entire promoter region":
+        reference_seq = [i for i in regulated_seqs if i != None][0]
+        c = 0
+        operators = []
+        while c < len(reference_seq)-24:
+            op = {"seq": reference_seq[c:c+24]}
+            operators.append(op)
+            c += 12
+
+        # Look for imperfect palindromes
+    elif params["search_method"] == "Look for inverted repeats":
+        reference_seq = [i for i in regulated_seqs if i != None][0]
+        ops = [findBestPalindrome(intergenic=reference_seq, \
+            shortest=params["min_operator_length"], longest=params["max_operator_length"], \
+                winScore=params["win_score"], lossScore=params["loss_score"], sPenalty=params["spacer_penalty"])][0]
         operators = []
         for operator in ops:
             operators.append(operator)
 
 
 
-
-        # Output data to be returned 
+        # Initialize output data
     operator_data = { 
         "accession": str(acc),
         "aligned_seq": "None",
@@ -284,6 +292,7 @@ def fetch_operator(homolog_metadata, params):
         "aligned_seqs": "None",
         "intergenic": regulated_seqs[0],
     }
+
     
 
     for operator in operators:
@@ -299,6 +308,7 @@ def fetch_operator(homolog_metadata, params):
                 homolog["predicted_operator"] =  op["operator"]
 
                 metrics.append(homolog)
+
 
             # Create the consensus 'motif' and calculate its quality score
         consensus = getConsensus(metrics)
@@ -319,9 +329,16 @@ def fetch_operator(homolog_metadata, params):
             operator_data["num_seqs"] = consensus["num_seqs"]
             operator_data["motif"] = consensus["motif_data"]
             operator_data["aligned_seqs"] = metrics
+            operator_data["frequency_matrix"] = generate_frequency_matrix(metrics)
 
-
-    frequency_matrix = generate_frequency_matrix(metrics)
-    #st.dataframe(frequency_matrix)
 
     return operator_data
+
+
+
+
+
+# if __name__ == "__main__":
+
+
+
