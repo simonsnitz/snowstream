@@ -66,19 +66,34 @@ def _connect_form_cb(connect_status):
 
 # HEADER: Title and basic input
 head = st.container()
-head1, head2, head3 = head.columns(3)
+head1, head2, head3 = head.columns((1,2,1))
 
 head2.markdown("<h1 style='text-align: center; color: black;'>Snowprint</h1>", unsafe_allow_html=True)
 head2.markdown("<h3 style='text-align: center; color: black;'>Predict a regulator's operator sequence</h3>", unsafe_allow_html=True)
 
-acc = head2.text_input("RefSeq ID", "AGY77479")
-#acc = head2.text_input("RefSeq ID", "ACS29497.1")
+
+selection_container = st.container()
+sel1, sel2, sel3 = selection_container.columns((1,2,1))
+
+input_method = sel2.radio(label="Choose an input format", \
+        options=("RefSeq", "Uniprot", "Protein sequence"))
+
+input_container = st.container()
+in1, in2, in3 = input_container.columns((1,2,1))
+
+if input_method == "RefSeq":
+    acc = in2.text_input(label="RefSeq ID", value="AGY77479", label_visibility="hidden")
+elif input_method == "Uniprot":
+    acc = in2.text_input(label="UniprotID", value="A0A170ND59", label_visibility="hidden")
+elif input_method == "Protein sequence":
+    acc = in2.text_area(label="Protein sequence", height=200, label_visibility="hidden")
+
+
 
 
 # Advanced options
 options = st.container()
 options1, options2, options3 = options.columns((1,3,1))
-
 
 
 # Side bar
@@ -234,14 +249,22 @@ if st.session_state.SUBMITTED:
 
     with st.spinner("blasting your protein"):
 
-
-        start = time.time()
         blast_df = blast(acc, blast_params)
 
         if blast_df.empty:
             blast_col.error("No blast file made")
         else:
             blast_col.subheader("BLAST results")
+
+
+            # This is code to make a datatable containing cells with hyperlinks
+            #def make_clickable(link):
+            #    return f'<a target="_blank" href="https://www.uniprot.org/uniprotkb/{link}/entry">{link}</a>'
+                # link is the column with hyperlinks
+            # blast_df['Uniprot Id'] = blast_df['Uniprot Id'].apply(make_clickable)
+            # blast_df = blast_df.to_html(escape=False)
+            # blast_col.write(blast_df, unsafe_allow_html=True)
+
             blast_col.dataframe(blast_df)
 
                 #inefficient. I'm converting from a dict to a dataframe, back to a dict.
