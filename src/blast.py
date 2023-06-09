@@ -1,6 +1,7 @@
 import os
 import subprocess
 import requests
+import json
 
 from tempfile import NamedTemporaryFile
 
@@ -20,36 +21,47 @@ def accID2sequence(accID: str):
     URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi/?db=protein&id="+accID+"&rettype=fasta"
     response = requests.get(URL)
     if response.ok:
-        #return response.text
-
         fasta = response.text.split("\n")
         fasta = [i for i in fasta if len(i) != 0]
         fasta = "".join(i for i in fasta if i[0] != ">")
-
         return fasta
     else:
         print("FATAL: Bad eFetch request "+ str(response.status_code))
+        st.error("RefSeq ID is invalid")
+        return None
+
+
+def uniprotID2sequence(ID: str):
+    URL = f"https://rest.uniprot.org/uniprotkb/{ID}?format=json&fields=sequence"
+    response = requests.get(URL)
+    if response.ok:
+        seq = json.loads(response.text)["sequence"]["value"]
+        return seq
+    else:
+        print("FATAL: Bad eFetch request "+ str(response.status_code))
+        st.error("Uniprot ID is invalid")
         return None
 
 
 @st.cache_data(show_spinner=False)
-def blast(acc, params):
+def blast(acc, input_method, params):
 
-    seq = accID2sequence(acc)
+    if input_method == "RefSeq":
+        seq = accID2sequence(acc)
+    elif input_method == "Uniprot":
+        seq = uniprotID2sequence(acc)
+    else:
+        seq = acc
 
     flags = 'sseqid pident qcovhsp'
-    #subprocess.call(f'diamond blastx -d {db_loc} -q {query.name} -o {tmp.name} '
-    #                    f'{parameters} --outfmt 6 {flags} >> {log.name} 2>&1',shell=True)
   
     query = NamedTemporaryFile()
     tmp = NamedTemporaryFile()
     log = NamedTemporaryFile()
     SeqIO.write(SeqRecord(Seq(seq), id="temp"), query.name, "fasta")
 
-    #diamond_db = "../diamond/diamond/tetr"
+    # Select database to blast
     diamond_db = "../diamond/diamond/bHTH"
-
-    st.write(Seq(seq))
     
     subprocess.call(f'diamond blastp -d {diamond_db} -q {query.name} -o {tmp.name} --outfmt 6 {flags} '
                     f' --id {params["ident_cutoff"]} --query-cover {params["cov_cutoff"]} --max-target-seqs 30 >> {log.name} 2>&1' , shell=True)
@@ -89,12 +101,14 @@ def blast(acc, params):
 
 if __name__ == "__main__":
 
+    #uniprotID2sequence("A0A170ND59")
     acc = "ACS29497.1"
+    #print(accID2sequence(acc))
 
-    if acc != None:
-        df = blast(acc)
-        pprint(df)
-    else:
-        print("bad seq")
+    # if acc != None:
+    #     df = blast(acc)
+    #     pprint(df)
+    # else:
+    #     print("bad seq")
 
     # print(seq)

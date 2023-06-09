@@ -86,7 +86,12 @@ if input_method == "RefSeq":
 elif input_method == "Uniprot":
     acc = in2.text_input(label="UniprotID", value="A0A170ND59", label_visibility="hidden")
 elif input_method == "Protein sequence":
-    acc = in2.text_area(label="Protein sequence", height=200, label_visibility="hidden")
+    protein_seq_input = in2.text_area(label="Protein sequence", height=200, label_visibility="hidden")
+    if re.match(r'^[ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy]*$', protein_seq_input) and len(protein_seq_input) > 50:
+        acc = protein_seq_input
+    else:
+        in2.error("Protein sequence must only contain amino acid characters and have a length over 50")
+
 
 
 
@@ -249,7 +254,7 @@ if st.session_state.SUBMITTED:
 
     with st.spinner("blasting your protein"):
 
-        blast_df = blast(acc, blast_params)
+        blast_df = blast(acc, input_method, blast_params)
 
         if blast_df.empty:
             blast_col.error("No blast file made")
