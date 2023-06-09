@@ -104,17 +104,45 @@ options1, options2, options3 = options.columns((1,3,1))
 # Side bar
 with st.sidebar:
     
+    # st.markdown('\
+    #     <style> \
+    #             #images {{  \
+    #             position: relative; \
+    #             bottom: -10px;  \
+    #             left: 15px; \
+    #             }}  \
+    #         </style>    \
+    #                     \
+    #         <div id="images">   \
+    #             <a href="https://twitter.com/matt_mcguffie">    \
+    #                 <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"/>  \
+    #             </a>    \
+    #             <a href="mailto: mmcguffie@utexas.edu"> \
+    #                 <img src="{email}"/>    \
+    #             </a>    \
+    #             <a href="https://github.com/simonsnitz/snowstream"> \
+    #                 <img src="{github}"/>   \
+    #             </a>    \
+    #             <a href="https://doi.org/10.1093/nar/gkab374">  \
+    #                 <img src="{paper}"/>    \
+    #             </a>    \
+    #         </div>  \
+    #         <br>    \
+    #     <br>' \
+    # , unsafe_allow_html=True)
+
     st.write("Prokaryotic transcription factors can be repurposed as chemical measurement tools for synthetic biology.")
     
-    st.write("To repurpose a transcription factor, the specific sequence of DNA it binds to must be determined.")
+    st.write("To repurpose a transcription factor, the specific DNA sequence it binds to must be determined.")
 
     st.write("Snowprint predicts transcription factor : DNA interactions by analyzing conservation patterns in the local genetic context.")
 
     st.write("Twitter / Email / GitHub / Paper links")
 
-    st.write("cite the bioRxiv paper")
+    st.markdown("<div style='font-size: 12px;'>d'Oelsnitz S., Stofel S.K., and Ellington A.D. (2023) Snowprint: a predictive tool for genetic biosensor discovery. \
+                <i>bioRxiv</i> <b>DOI:</b><a href='https://www.biorxiv.org/content/10.1101/2023.04.29.538814v1'>10.1101/2023.04.29.538814v1</a></div> <br>", unsafe_allow_html=True)
 
-    st.write("acknowledge funding agencies")
+    st.markdown("<p style='font-size: 12px'>Snowprint development was supported by the National Institute of Standards and Technology (70NANB21H100)", unsafe_allow_html=True)
 
     st.divider()
 
