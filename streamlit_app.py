@@ -13,7 +13,7 @@ import json
 
 import time
 
-st.set_page_config(page_title="Snowprint", layout='wide', initial_sidebar_state='auto')
+st.set_page_config(page_title="Snowprint", layout='wide', initial_sidebar_state='auto', page_icon="images/Snowprint_favicon.png")
 
 
 
