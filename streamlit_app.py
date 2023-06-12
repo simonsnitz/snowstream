@@ -72,7 +72,6 @@ head = st.container()
 head1, head2, head3 = head.columns((1,2,1))
 
 head2.image("images/Snowprint_Logo.png", use_column_width=True)
-# head2.markdown("<h1 style='text-align: center; font-size: 60px; font-weight: 300; color: black;'>Snowprint</h1>", unsafe_allow_html=True)
 head2.markdown("<h3 style='text-align: center; color: black;'>Predict a regulator's operator sequence</h3>", unsafe_allow_html=True)
 
 
@@ -141,7 +140,9 @@ with st.sidebar:
 
     st.write("Snowprint predicts transcription factor : DNA interactions by analyzing conservation patterns in the local genetic context.")
 
-    st.write("Twitter / Email / GitHub / Paper links")
+    # GitHub and Email links
+    st.markdown("<a href='https://github.com/simonsnitz/snowstream'>GitHub</a>", unsafe_allow_html=True)
+    st.markdown("<a href='mailto: simonsnitz@gmail.com'>Email</a>", unsafe_allow_html=True)
 
     st.markdown("<div style='font-size: 12px;'>d'Oelsnitz S., Stofel S.K., and Ellington A.D. (2023) Snowprint: a predictive tool for genetic biosensor discovery. \
                 <i>bioRxiv</i> <b>DOI:</b><a href='https://www.biorxiv.org/content/10.1101/2023.04.29.538814v1'>10.1101/2023.04.29.538814v1</a></div> <br>", unsafe_allow_html=True)
