@@ -7,6 +7,8 @@ from src.fetch_operator import fetch_operator
 
 import re
 import pandas as pd
+import requests
+import json
 
 import time
 
@@ -277,16 +279,45 @@ if st.session_state.SUBMITTED:
 
 
     intermediate = st.container()
+    input1, input2 = intermediate.columns((4,1))
     blast_col, coordinates_col, homologs_col = intermediate.columns((1.3,2,2.2))
 
 
     with st.spinner("blasting your protein"):
 
+
         blast_df = blast(acc, input_method, blast_params)
 
         if blast_df.empty:
-            blast_col.error("No blast file made")
+            blast_col.error("No blast results returned")
         else:
+
+            def uniprotID2info(ID: str):
+                URL = f"https://rest.uniprot.org/uniprotkb/{ID}?format=json&fields=sequence,organism_name,protein_name"
+                response = requests.get(URL)
+                if response.ok:
+                    data = json.loads(response.text)
+                    out = {
+                        "Annotation": data["proteinDescription"]["recommendedName"]["fullName"]["value"],
+                        "Organism": data["organism"]["scientificName"],
+                        "Lineage": "".join(i+", " for i in data["organism"]["lineage"])[:-2],
+                    }
+                    return out
+                else:
+                    print("FATAL: Bad uniprot API request "+ str(response.status_code))
+                    st.error("Uniprot ID is invalid")
+                    return None
+
+            uniprot = blast_df.iloc[0]["Uniprot Id"]
+            protein_data = uniprotID2info(uniprot)
+            input1.subheader("Input")
+            input1.markdown("Annotation: "+protein_data["Annotation"])
+            input1.markdown("Organism: "+protein_data["Organism"])
+            input1.markdown("Lineage: "+protein_data["Lineage"])
+
+
+
+
             blast_col.subheader("BLAST results")
 
 
