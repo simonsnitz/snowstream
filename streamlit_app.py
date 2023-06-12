@@ -4,6 +4,7 @@ from src.get_genome_coordinates import get_genome_coordinates, get_genome_coordi
 from src.accID2operon import acc2operon
 from src.fetch_promoter import fetch_promoter
 from src.fetch_operator import fetch_operator
+from src.troubleshoot import troubleshoot
 
 import re
 import pandas as pd
@@ -288,8 +289,21 @@ if st.session_state.SUBMITTED:
 
         blast_df = blast(acc, input_method, blast_params)
 
+        # If BLAST does not return anything, troubleshoot the issue.
         if blast_df.empty:
-            blast_col.error("No blast results returned")
+            if input_method == "Protein sequence":
+                blast_col.error("BLAST failed. Try running a RefSeq or Uniprot ID for more detailed error codes")
+            else:
+                mode, genes = troubleshoot(input_method, acc)
+                if mode == "not bacteria":
+                    st.error("Protein is not from Bacteria. Snowprint only works for bacterial proteins")
+                elif mode == "genes":
+                    st.error("No blast results returned. Try running these genes in the same operon")
+                    for i in genes:
+                        st.write("RefSeq: "+str(i))
+
+
+
         else:
 
             def uniprotID2info(ID: str):
@@ -300,7 +314,7 @@ if st.session_state.SUBMITTED:
                     out = {
                         "Annotation": data["proteinDescription"]["recommendedName"]["fullName"]["value"],
                         "Organism": data["organism"]["scientificName"],
-                        "Lineage": "".join(i+", " for i in data["organism"]["lineage"])[:-2],
+                        "Lineage": data["organism"]["lineage"],
                     }
                     return out
                 else:
@@ -313,7 +327,8 @@ if st.session_state.SUBMITTED:
             input1.subheader("Input")
             input1.markdown("Annotation: "+protein_data["Annotation"])
             input1.markdown("Organism: "+protein_data["Organism"])
-            input1.markdown("Lineage: "+protein_data["Lineage"])
+            lineage = "".join(i+", " for i in protein_data["Lineage"])[:-2]
+            input1.markdown("Lineage: "+lineage)
 
 
 

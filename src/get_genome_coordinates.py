@@ -22,6 +22,38 @@ def uniprot2EMBL(uniprotID):
 
 
 
+def get_genome_coordinates_refseq(acc):
+
+    response = requests.get('https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&id='+acc+'&rettype=ipg')
+    if response.ok:
+        parsed = xmltodict.parse(response.text)
+        proteins = parsed["IPGReportSet"]["IPGReport"]
+
+
+        if "ProteinList" in proteins.keys():
+            protein = proteins["ProteinList"]["Protein"]
+            if isinstance(protein, list):
+                protein = protein[0]
+            CDS = protein["CDSList"]["CDS"]
+                #CDS is a list if there is more than 1 CDS returned, otherwise it's a dictionary
+            if isinstance(CDS, list):
+                CDS = CDS[0]
+            homolog_dict_item = {}
+            homolog_dict_item["Genome"] = CDS["@accver"]
+            homolog_dict_item["Start"] = CDS["@start"]
+            homolog_dict_item["Stop"] = CDS["@stop"]
+            homolog_dict_item["Strand"] = CDS["@strand"]              
+
+            return homolog_dict_item
+
+        else:
+            print("ProteinList is not in IPGReport")
+    else:
+        print('WARNING: get_genome_coordinates eFetch request failed')
+
+
+
+
 
 @st.cache_data(show_spinner=False)
 def get_genome_coordinates(homolog_dict_item):
