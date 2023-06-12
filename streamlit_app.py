@@ -71,7 +71,8 @@ def _connect_form_cb(connect_status):
 head = st.container()
 head1, head2, head3 = head.columns((1,2,1))
 
-head2.markdown("<h1 style='text-align: center; color: black;'>Snowprint</h1>", unsafe_allow_html=True)
+head2.image("images/Snowprint_Logo.png", use_column_width=True)
+# head2.markdown("<h1 style='text-align: center; font-size: 60px; font-weight: 300; color: black;'>Snowprint</h1>", unsafe_allow_html=True)
 head2.markdown("<h3 style='text-align: center; color: black;'>Predict a regulator's operator sequence</h3>", unsafe_allow_html=True)
 
 
