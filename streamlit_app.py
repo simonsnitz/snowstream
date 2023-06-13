@@ -13,8 +13,8 @@ import json
 
 import time
 
-st.set_page_config(page_title="Snowprint", layout='wide', initial_sidebar_state='auto', page_icon="images/Snowprint_favicon.png")
 
+st.set_page_config(page_title="Snowprint", layout='wide', initial_sidebar_state='auto', page_icon="images/Snowprint_favicon.png")
 
 
 
@@ -72,7 +72,7 @@ head = st.container()
 head1, head2, head3 = head.columns((1,2,1))
 
 head2.image("images/Snowprint_Logo.png", use_column_width=True)
-head2.markdown("<h3 style='text-align: center; color: black;'>Predict a regulator's operator sequence</h3>", unsafe_allow_html=True)
+head2.markdown("<h3 style='text-align: center; color: black;'>Predict a regulator's DNA binding sequence</h3>", unsafe_allow_html=True)
 
 
 selection_container = st.container()
@@ -107,42 +107,16 @@ options1, options2, options3 = options.columns((1,3,1))
 # Side bar
 with st.sidebar:
     
-    # st.markdown('\
-    #     <style> \
-    #             #images {{  \
-    #             position: relative; \
-    #             bottom: -10px;  \
-    #             left: 15px; \
-    #             }}  \
-    #         </style>    \
-    #                     \
-    #         <div id="images">   \
-    #             <a href="https://twitter.com/matt_mcguffie">    \
-    #                 <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"/>  \
-    #             </a>    \
-    #             <a href="mailto: mmcguffie@utexas.edu"> \
-    #                 <img src="{email}"/>    \
-    #             </a>    \
-    #             <a href="https://github.com/simonsnitz/snowstream"> \
-    #                 <img src="{github}"/>   \
-    #             </a>    \
-    #             <a href="https://doi.org/10.1093/nar/gkab374">  \
-    #                 <img src="{paper}"/>    \
-    #             </a>    \
-    #         </div>  \
-    #         <br>    \
-    #     <br>' \
-    # , unsafe_allow_html=True)
 
     st.write("Prokaryotic transcription factors can be repurposed as chemical measurement tools for synthetic biology.")
     
     st.write("To repurpose a transcription factor, the specific DNA sequence it binds to must be determined.")
 
-    st.write("Snowprint predicts transcription factor : DNA interactions by analyzing conservation patterns in the local genetic context.")
+    st.write("Snowprint predicts transcription factor-DNA interactions by analyzing conservation patterns in local genomic contexts.")
 
     # GitHub and Email links
-    st.markdown("<a href='https://github.com/simonsnitz/snowstream'>GitHub</a>", unsafe_allow_html=True)
-    st.markdown("<a href='mailto: simonsnitz@gmail.com'>Email</a>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size: 12px'>If you have any questions or would like to report any bugs, please contact us via <a href='mailto: simonsnitz@gmail.com'>Email</a>. \
+        Our code is publically available on <a href='https://github.com/simonsnitz/snowstream'>GitHub</a>.</p>", unsafe_allow_html=True)
 
     st.markdown("<div style='font-size: 12px;'>d'Oelsnitz S., Stofel S.K., and Ellington A.D. (2023) Snowprint: a predictive tool for genetic biosensor discovery. \
                 <i>bioRxiv</i> <b>DOI:</b><a href='https://www.biorxiv.org/content/10.1101/2023.04.29.538814v1'>10.1101/2023.04.29.538814v1</a></div> <br>", unsafe_allow_html=True)
@@ -151,6 +125,8 @@ with st.sidebar:
 
     st.divider()
 
+
+    # Advanced options
     st.markdown("<h1 style='text-align: center; color: black;'>Advanced options</h1>", unsafe_allow_html=True)
 
     adv_options = st.container()
@@ -161,6 +137,9 @@ with st.sidebar:
     blast_container1.subheader("BLAST")
     ident_cutoff = blast1.number_input(label="Identity cutoff", min_value=30, max_value=90, value=40)
     cov_cutoff = blast2.number_input(label="Coverage cutoff", min_value=50, max_value=100, value=90)
+    max_homologs = blast1.number_input(label="Max homologs", min_value=10, max_value=100, value=30)
+    blast2.markdown("<p style='font-size: 14px'>Filter redundant?</p>", unsafe_allow_html=True)
+    filter_redundant = blast2.checkbox(label="Filter redundant?", value=True, label_visibility="hidden")
     blast_container2.divider()
 
     promoter_container1 = adv_options.container()
@@ -237,7 +216,7 @@ with st.sidebar:
 
 
 
-
+# Format advanced options
 blast_params = {
     "ident_cutoff": ident_cutoff,
     "cov_cutoff": cov_cutoff
@@ -269,12 +248,11 @@ operator_params = {
 # FORM
 with st.form(key='snowprint'):
 
+
     # SUBMIT BUTTON
     submit = st.container()
     submit_spacer_1, submit_button, submit_spacer_2 = submit.columns([5,1,5])
     submitted = submit_button.form_submit_button("Submit", use_container_width=True, on_click=_connect_form_cb, args=(True,))
-
-
 
 
 # RUN SNOWPRINT
@@ -289,7 +267,7 @@ if st.session_state.SUBMITTED:
     with st.spinner("blasting your protein"):
 
 
-        blast_df = blast(acc, input_method, blast_params)
+        blast_df = blast(acc, input_method, blast_params, max_seqs=500)
 
         # If BLAST does not return anything, troubleshoot the issue.
         if blast_df.empty:
@@ -304,10 +282,30 @@ if st.session_state.SUBMITTED:
                     for i in genes:
                         st.write("RefSeq: "+str(i))
 
-
-
+        # BLAST results look good
         else:
 
+            #if 'filter redundant' box checked, filter out homologs that have the same %identity and %coverage
+            def filter_blastDf(blast_df):
+                homolog_dict = []
+                ident_covs = []
+                for i, row in blast_df.iterrows():
+                    entry =   {"Uniprot Id": row["Uniprot Id"], "identity": row["Identity"],"coverage": row["Coverage"]}
+                    to_compare =   {"identity": row["Identity"],"coverage": row["Coverage"]}
+                    if to_compare not in ident_covs:
+                        homolog_dict.append(entry)
+                        ident_covs.append(to_compare)
+                return homolog_dict
+
+            if filter_redundant:
+                homolog_dict = filter_blastDf(blast_df)
+
+            # limit search to specified number of homologs
+            homolog_dict = homolog_dict[0:max_homologs]
+
+
+
+            # Create an info section on the input protein
             def uniprotID2info(ID: str):
                 URL = f"https://rest.uniprot.org/uniprotkb/{ID}?format=json&fields=sequence,organism_name,protein_name"
                 response = requests.get(URL)
@@ -325,43 +323,29 @@ if st.session_state.SUBMITTED:
                     return None
 
             uniprot = blast_df.iloc[0]["Uniprot Id"]
-            protein_data = uniprotID2info(uniprot)
-            input1.subheader("Input")
-            input1.markdown("Annotation: "+protein_data["Annotation"])
-            input1.markdown("Organism: "+protein_data["Organism"])
-            lineage = "".join(i+", " for i in protein_data["Lineage"])[:-2]
-            input1.markdown("Lineage: "+lineage)
-
-
+            try:
+                protein_data = uniprotID2info(uniprot)
+                input1.subheader("Input")
+                input1.markdown("Annotation: "+protein_data["Annotation"])
+                input1.markdown("Organism: "+protein_data["Organism"])
+                lineage = "".join(i+", " for i in protein_data["Lineage"])[:-2]
+                input1.markdown("Lineage: "+lineage)
+            except:
+                pass
 
 
             blast_col.subheader("BLAST results")
+            blast_col.dataframe(homolog_dict)
 
-
-            # This is code to make a datatable containing cells with hyperlinks
-            #def make_clickable(link):
-            #    return f'<a target="_blank" href="https://www.uniprot.org/uniprotkb/{link}/entry">{link}</a>'
-                # link is the column with hyperlinks
-            # blast_df['Uniprot Id'] = blast_df['Uniprot Id'].apply(make_clickable)
-            # blast_df = blast_df.to_html(escape=False)
-            # blast_col.write(blast_df, unsafe_allow_html=True)
-
-            blast_col.dataframe(blast_df)
-
-                #inefficient. I'm converting from a dict to a dataframe, back to a dict.
-            homolog_dict = [ 
-                {
-                    "Uniprot Id": row["Uniprot Id"],
-                    "identity": row["Identity"],
-                    "coverage": row["Coverage"]
-                }
-                for i, row in blast_df.iterrows()
-            ]
 
     with st.spinner("Getting genome coordianates"):
 
         if get_coordinates_method == "batch":
             homolog_dict = get_genome_coordinates_batch(homolog_dict)
+
+            #TODO: I get an error here sometimes.
+            if homolog_dict == None:
+                st.error("Failed fetching genome coordinates. Try fetching these individually (advanced options)")
             homolog_dict = [i for i in homolog_dict if i != None]
 
         
@@ -373,7 +357,7 @@ if st.session_state.SUBMITTED:
             updated_homolog_dict = []
             for i in range(0, len(homolog_dict)):
                 prog_value = int(i*prog_bar_increment)
-                prog_bar.progress(prog_value, text=f"Fetching context for homolog {str(i+1)} of {str(len(homolog_dict))} (accession: {homolog_dict[i]['Uniprot Id']})")
+                prog_bar.progress(prog_value, text=f"Fetching context for homolog {str(i+1)} of {str(len(homolog_dict))} (Uniprot ID: {homolog_dict[i]['Uniprot Id']})")
                 updated_homolog_dict.append(get_genome_coordinates(homolog_dict[i]))
 
             prog_bar.empty()
@@ -417,36 +401,16 @@ if st.session_state.SUBMITTED:
 
 
 
-
             #### RESULTS ####
 
 
+            # Create header and containers
             results = st.container()
             results.markdown("<h1 style='text-align: center; color: black;'>Results</h1>", unsafe_allow_html=True)
             res1, res2 = results.columns((1,2.5))
             
 
-
-            # Create the consensus motif logo
-            motif = operator_dict["motif"]
-            motif_html = "<div>"
-            #color_key = {"A":"#ff5454", "T": "#00bd00", "C": "#54a7ff", "G": "yellow"}
-            color_key = {"A":"red", "T": "green", "C": "blue", "G": "#fcba03"}
-            for i in motif:
-                motif_html += "<span style='color: "+str(color_key[i["base"].upper()])+"; font-size: 400%; font-weight: 550;display: inline-block; \
-                    transform:  translateY("+str(1.25-i["score"]**3)+"em)  scaleY("+str(3*i["score"]**3)+") '>"+str(i["base"])+"</span>"
-                    #transform:  translateY("+str(1.25-i["score"]**1.5)+"em)  scaleY("+str(2*i["score"]**3)+") '>"+str(i["base"])+"</span>"
-
-
-            motif_html += "</div>"
-            results.markdown("Consensus sequence")
-                # This is returning the native promoter seq, not the consensus seq
-            consensus_seq = operator_dict["consensus_seq"]
-            results.markdown("<p style='font-size: 32px'>"+consensus_seq+"</p>", unsafe_allow_html=True)
-            results.markdown("Conservation motif logo")
-            results.markdown(motif_html, unsafe_allow_html=True)
-
-
+            # Display metrics
             metric1, metric2 = res1.columns(2)
             metric1.metric(label="Conservation score", value=operator_dict["consensus_score"])
             metric2.metric(label="Sequences aligned", value=operator_dict["num_seqs"])
@@ -464,8 +428,22 @@ if st.session_state.SUBMITTED:
                     break
 
 
+            # Display the consensus sequence
+            results.markdown("Consensus sequence")
+            consensus_seq = operator_dict["consensus_seq"]
+            results.markdown("<p style='font-size: 32px'>"+consensus_seq+"</p>", unsafe_allow_html=True)
 
-            #st.dataframe(motif)
+
+            # Create & Display the consensus motif logo
+            motif = operator_dict["motif"]
+            motif_html = "<div>"
+            color_key = {"A":"red", "T": "green", "C": "blue", "G": "#fcba03"}
+            for i in motif:
+                motif_html += "<span style='color: "+str(color_key[i["base"].upper()])+"; font-size: 400%; font-weight: 550;display: inline-block; \
+                    transform:  translateY("+str(1.25-i["score"]**3)+"em)  scaleY("+str(3*i["score"]**3)+") '>"+str(i["base"])+"</span>"
+            motif_html += "</div>"
+            results.markdown("Conservation motif logo")
+            results.markdown(motif_html, unsafe_allow_html=True)
 
 
 

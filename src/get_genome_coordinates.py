@@ -1,7 +1,7 @@
 import requests
 import xmltodict
 import json
-from pathlib import Path
+import time
 from pprint import pprint
 import streamlit as st
 
@@ -58,35 +58,37 @@ def get_genome_coordinates_refseq(acc):
 @st.cache_data(show_spinner=False)
 def get_genome_coordinates(homolog_dict_item):
 
-    embl = uniprot2EMBL(homolog_dict_item["accession"])
-    #homolog_dict_item["EMBL"] = embl
+    embl = uniprot2EMBL(homolog_dict_item["Uniprot Id"])
 
-    response = requests.get('https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&id='+embl+'&rettype=ipg')
-    if response.ok:
-        parsed = xmltodict.parse(response.text)
-        proteins = parsed["IPGReportSet"]["IPGReport"]
+    try:
+        response = requests.get('https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&id='+embl+'&rettype=ipg')
+        if response.ok:
+            parsed = xmltodict.parse(response.text)
+            proteins = parsed["IPGReportSet"]["IPGReport"]
 
 
-        if "ProteinList" in proteins.keys():
-            protein = proteins["ProteinList"]["Protein"]
-            if isinstance(protein, list):
-                protein = protein[0]
-            CDS = protein["CDSList"]["CDS"]
-                #CDS is a list if there is more than 1 CDS returned, otherwise it's a dictionary
-            if isinstance(CDS, list):
-                CDS = CDS[0]
+            if "ProteinList" in proteins.keys():
+                protein = proteins["ProteinList"]["Protein"]
+                if isinstance(protein, list):
+                    protein = protein[0]
+                CDS = protein["CDSList"]["CDS"]
+                    #CDS is a list if there is more than 1 CDS returned, otherwise it's a dictionary
+                if isinstance(CDS, list):
+                    CDS = CDS[0]
 
-            homolog_dict_item["Genome"] = CDS["@accver"]
-            homolog_dict_item["Start"] = CDS["@start"]
-            homolog_dict_item["Stop"] = CDS["@stop"]
-            homolog_dict_item["Strand"] = CDS["@strand"]              
+                homolog_dict_item["Genome"] = CDS["@accver"]
+                homolog_dict_item["Start"] = CDS["@start"]
+                homolog_dict_item["Stop"] = CDS["@stop"]
+                homolog_dict_item["Strand"] = CDS["@strand"]              
 
-            return homolog_dict_item
+                return homolog_dict_item
 
+            else:
+                st.error("ProteinList is not in IPGReport for "+str(homolog_dict_item['Uniprot Id']))
         else:
-            st.error("ProteinList is not in IPGReport for "+str(homolog_dict_item['EMBL']))
-    else:
-        st.error('WARNING: get_genome_coordinates eFetch request failed for '+str(homolog_dict_item['EMBL']))
+            st.error('WARNING: get_genome_coordinates eFetch request failed for '+str(homolog_dict_item['Uniprot Id']))
+    except:
+        return homolog_dict_item
 
 
 
@@ -94,9 +96,14 @@ def get_genome_coordinates(homolog_dict_item):
 @st.cache_data(show_spinner=False)
 def get_genome_coordinates_batch(homolog_dict):
 
-    # for i in homolog_dict:
-    #     i["EMBL"] = uniprot2EMBL(i["accession"])
-    embl_acc_list = [uniprot2EMBL(i["Uniprot Id"]) for i in homolog_dict]
+
+        # This was returning 443 HTTPS error codes from Uniprot. Have to wait
+    #embl_acc_list = [uniprot2EMBL(i["Uniprot Id"]) for i in homolog_dict]
+    embl_acc_list = []
+    for i in homolog_dict:
+        embl_acc_list.append(uniprot2EMBL(i["Uniprot Id"]))
+        time.sleep(1)
+
     embl_string = "".join(i+"," for i in embl_acc_list)[:-1]
     
 

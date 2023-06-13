@@ -1,4 +1,3 @@
-import os
 import subprocess
 import requests
 import json
@@ -10,7 +9,6 @@ from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 
 from pprint import pprint
-import numpy as np
 import pandas as pd
 import streamlit as st
 
@@ -44,7 +42,7 @@ def uniprotID2sequence(ID: str):
 
 
 @st.cache_data(show_spinner=False)
-def blast(acc, input_method, params):
+def blast(acc, input_method, params, max_seqs):
 
     if input_method == "RefSeq":
         seq = accID2sequence(acc)
@@ -64,7 +62,7 @@ def blast(acc, input_method, params):
     diamond_db = "../diamond/diamond/bHTH"
     
     subprocess.call(f'diamond blastp -d {diamond_db} -q {query.name} -o {tmp.name} --outfmt 6 {flags} '
-                    f' --id {params["ident_cutoff"]} --query-cover {params["cov_cutoff"]} --max-target-seqs 30 >> {log.name} 2>&1' , shell=True)
+                    f' --id {params["ident_cutoff"]} --query-cover {params["cov_cutoff"]} --max-target-seqs {max_seqs} >> {log.name} 2>&1' , shell=True)
 
     with open(tmp.name, "r") as file_handle:  #opens BLAST file
         align = file_handle.readlines()
