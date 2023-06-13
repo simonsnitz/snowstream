@@ -299,6 +299,11 @@ if st.session_state.SUBMITTED:
 
             if filter_redundant:
                 homolog_dict = filter_blastDf(blast_df)
+            else:
+                homolog_dict = [
+                    {"Uniprot Id": row["Uniprot Id"], "identity": row["Identity"],"coverage": row["Coverage"]}
+                    for i, row in blast_df.iterrows()
+                    ]
 
             # limit search to specified number of homologs
             homolog_dict = homolog_dict[0:max_homologs]

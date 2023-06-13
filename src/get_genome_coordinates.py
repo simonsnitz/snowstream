@@ -97,12 +97,12 @@ def get_genome_coordinates(homolog_dict_item):
 def get_genome_coordinates_batch(homolog_dict):
 
 
-        # This was returning 443 HTTPS error codes from Uniprot. Have to wait
-    #embl_acc_list = [uniprot2EMBL(i["Uniprot Id"]) for i in homolog_dict]
-    embl_acc_list = []
-    for i in homolog_dict:
-        embl_acc_list.append(uniprot2EMBL(i["Uniprot Id"]))
-        time.sleep(1)
+        # This was returning a 443 HTTPS error code from Uniprot when I have a slow internet connection.
+    embl_acc_list = [uniprot2EMBL(i["Uniprot Id"]) for i in homolog_dict]
+    # embl_acc_list = []
+    # for i in homolog_dict:
+    #     embl_acc_list.append(uniprot2EMBL(i["Uniprot Id"]))
+    #     time.sleep(1)
 
     embl_string = "".join(i+"," for i in embl_acc_list)[:-1]
     
@@ -131,7 +131,7 @@ def get_genome_coordinates_batch(homolog_dict):
                     homolog_dict[i]["Strand"] = CDS["@strand"]              
 
                 else:
-                    st.error("ProteinList is not in IPGReport")
+                    print("ProteinList is not in IPGReport")
 
             return homolog_dict
 
