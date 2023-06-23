@@ -52,6 +52,8 @@ def blast(acc, input_method, params, max_seqs):
         seq = acc
 
     flags = 'sseqid pident qcovhsp'
+        # Must set this memory limit for running on a 1GB EC2 instance
+    memory_limit = 0.15
   
     query = NamedTemporaryFile()
     tmp = NamedTemporaryFile()
@@ -59,9 +61,9 @@ def blast(acc, input_method, params, max_seqs):
     SeqIO.write(SeqRecord(Seq(seq), id="temp"), query.name, "fasta")
 
     # Select database to blast
-    diamond_db = "../diamond/diamond/bHTH"
+    diamond_db = "../databases/bHTH_RefSeq.dmnd"
     
-    subprocess.call(f'diamond blastp -d {diamond_db} -q {query.name} -o {tmp.name} --outfmt 6 {flags} '
+    subprocess.call(f'diamond blastp -d {diamond_db} -q {query.name} -o {tmp.name} --outfmt 6 {flags} -b {memory_limit}'
                     f' --id {params["ident_cutoff"]} --query-cover {params["cov_cutoff"]} --max-target-seqs {max_seqs} >> {log.name} 2>&1' , shell=True)
 
     with open(tmp.name, "r") as file_handle:  #opens BLAST file

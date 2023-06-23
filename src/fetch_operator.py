@@ -1,10 +1,7 @@
 from Bio.pairwise2 import align, format_alignment
-import json
 from pprint import pprint
 import streamlit as st
-import math
 import sys
-from pyfamsa import Aligner, Sequence
 
 
 

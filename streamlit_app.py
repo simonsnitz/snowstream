@@ -85,9 +85,9 @@ input_container = st.container()
 in1, in2, in3 = input_container.columns((1,2,1))
 
 if input_method == "RefSeq":
-    acc = in2.text_input(label="RefSeq ID", value="AGY77479", label_visibility="hidden")
+    acc = in2.text_input(label="RefSeq ID", value="WP_013083972.1", label_visibility="hidden")
 elif input_method == "Uniprot":
-    acc = in2.text_input(label="UniprotID", value="A0A170ND59", label_visibility="hidden")
+    acc = in2.text_input(label="UniprotID", value="P43506", label_visibility="hidden")
 elif input_method == "Protein sequence":
     protein_seq_input = in2.text_area(label="Protein sequence", height=200, label_visibility="hidden")
     if re.match(r'^[ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy]*$', protein_seq_input) and len(protein_seq_input) > 50:
@@ -278,9 +278,7 @@ if st.session_state.SUBMITTED:
                 if mode == "not bacteria":
                     st.error("Protein is not from Bacteria. Snowprint only works for bacterial proteins")
                 elif mode == "genes":
-                    st.error("No blast results returned. Try running these genes in the same operon")
-                    for i in genes:
-                        st.write("RefSeq: "+str(i))
+                    st.error("No blast results returned. Try running the command line tool https://github.com/simonsnitz/Snowprint")
 
         # BLAST results look good
         else:
