@@ -23,17 +23,26 @@ if input_method == "RefSeq":
     acc = "WP_013083972.1"
 elif input_method == "Uniprot":
     acc = "P43506"
+elif input_method == "Protein sequence":
+    acc = "P43506"
+    # get a string input from the user.
+
 
 # Tunable BLAST parameters
 ident_cutoff = 40
+    # 30 - 90
 cov_cutoff = 90
+    # 60 - 100
 max_homologs = 30
+    # 10 - 100
 filter_redundant = True
 
 
 # Tunable promoters search parameters
 prom_min_length = 80
+    # 1 - 500
 prom_max_length = 800
+    # 20 - 9000
 get_coordinates_method = "batch"
     # individually
 
@@ -41,24 +50,38 @@ get_coordinates_method = "batch"
 # Tunable operator search parameters
 search_method = "Look for inverted repeats"
     # Align an input sequence
+        # Have the user input a string
     # Scan entire promoter region
+        # True/False
 if search_method == "Look for inverted repeats":
     win_score = 2
+        # 0 - 10
     loss_score = -2
+        # -10 - 0
     min_operator_length = 5
+        # 3 - 10
     max_operator_length = 15
+        # 11 - 40
     spacer_penalty = \
         [{"0":4, "1":4, "2":4, "3":4, "4":4, "5":2, "6":2, "7":0, "8":0, "9":-2, "10":-2, \
         "11":-4, "12":-4, "13":-6, "14":-6, "15":-8, "16":-8, "17":-10, "18":-10, "19":-12, "20":-12}]
     seq_to_align = None
+        
+# if search_method = "Align an input sequence":
+    # seq_to_align = input sequence
 
 
 # Tunable promoter alignment parameters
 extension_length = 5
+    # 0 - 10
 gap_open = -100
+    # -999 - 0
 gap_extend = 0
+    # -999 - 0
 align_match = 2
+    # 1 - 100
 align_mismatch = -0.5
+    # -100 - 1
 
 
 
