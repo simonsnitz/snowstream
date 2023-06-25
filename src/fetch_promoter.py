@@ -1,10 +1,8 @@
 import requests
 import json
-import streamlit as st
 from pprint import pprint
 
 
-@st.cache_data(show_spinner=False)
 def fetch_promoter(homolog_dict, params):
 
     operon = homolog_dict["operon"]
@@ -85,10 +83,8 @@ def fetch_promoter(homolog_dict, params):
         if len(output) <= params["max_length"] and len(output) >= params["min_length"]:
             return output
         else:
-            #st.error("No promoter within promoter parameters found for "+str(genome_id))
             return None
     else:
-        #st.error("Could not get promoter. Bad eFetch for "+str(genome_id))
         return None
 
          # 800bp cutoff for an inter-operon region. 

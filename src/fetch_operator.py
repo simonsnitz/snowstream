@@ -1,6 +1,5 @@
 from Bio.pairwise2 import align, format_alignment
 from pprint import pprint
-import streamlit as st
 import sys
 
 
