@@ -98,7 +98,23 @@ def get_genome_coordinates_batch(homolog_dict):
 
 
         # This was returning a 443 HTTPS error code from Uniprot when I have a slow internet connection.
-    embl_acc_list = [uniprot2EMBL(i["Uniprot Id"]) for i in homolog_dict]
+
+
+    # sometimes there is "uniProtKBCrossReferences" key for a protein
+    # this messes up the homolog_dict indexing, so to catch this case we need to 
+    # create a new homolog dict that only includes proteins with the "uniProtKBCrossReferences" key
+    new_homolog_dict = []
+    embl_acc_list = []
+    for i in homolog_dict:
+        try:
+            embl = uniprot2EMBL(i["Uniprot Id"])
+            embl_acc_list.append(embl)
+            new_homolog_dict.append(i)
+        except:
+            pass
+    homolog_dict = new_homolog_dict
+
+    #embl_acc_list = [uniprot2EMBL(i["Uniprot Id"]) for i in homolog_dict]
     # embl_acc_list = []
     # for i in homolog_dict:
     #     embl_acc_list.append(uniprot2EMBL(i["Uniprot Id"]))
