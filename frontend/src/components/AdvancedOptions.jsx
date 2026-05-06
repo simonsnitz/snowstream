@@ -3,10 +3,10 @@ import {
   AccordionDetails,
   AccordionSummary,
   Box,
-  Checkbox,
   FormControl,
   FormControlLabel,
   FormLabel,
+  IconButton,
   Radio,
   RadioGroup,
   Stack,
@@ -14,6 +14,7 @@ import {
   Typography,
 } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import CloseIcon from '@mui/icons-material/Close'
 
 function NumField({ label, value, onChange, min, max, step = 1, ...rest }) {
   return (
@@ -36,14 +37,25 @@ export default function AdvancedOptions({
   coordinatesMethod,
   alignment,
   onChange,
+  onClose,
 }) {
   const set = (key, val) => onChange({ [key]: val })
 
   return (
     <Box sx={{ width: 360 }}>
-      <Typography variant="h6" sx={{ px: 2, pt: 2 }}>
-        Advanced options
-      </Typography>
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent="space-between"
+        sx={{ px: 2, pt: 2 }}
+      >
+        <Typography variant="h6">Advanced options</Typography>
+        {onClose && (
+          <IconButton onClick={onClose} aria-label="close advanced options" size="small">
+            <CloseIcon />
+          </IconButton>
+        )}
+      </Stack>
 
       <Accordion defaultExpanded disableGutters>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -71,15 +83,6 @@ export default function AdvancedOptions({
               onChange={(v) => set('blast', { ...blast, max_homologs: v })}
               min={10}
               max={100}
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={blast.filter_redundant}
-                  onChange={(e) => set('blast', { ...blast, filter_redundant: e.target.checked })}
-                />
-              }
-              label="Filter redundant"
             />
           </Stack>
         </AccordionDetails>

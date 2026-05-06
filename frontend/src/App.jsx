@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Alert,
   Box,
@@ -88,14 +88,38 @@ export default function App() {
   }, [cacheMeta?.cache_key])
 
   // Compute operator extraction whenever the predict result OR the operator
-  // method/params/alignment params change.
-  const operatorResult = useMemo(() => {
-    if (!predictResult?.homologs?.length) return null
-    const candidates = METHODS[operatorMethod].run(
-      predictResult.homologs.map((h) => h.promoter),
-      operatorParams,
+  // method/params/alignment params change. Methods may be async (BioMSA),
+  // so this runs in an effect rather than useMemo.
+  const [operatorResult, setOperatorResult] = useState(null)
+  const [operatorComputing, setOperatorComputing] = useState(false)
+  useEffect(() => {
+    if (!predictResult?.homologs?.length) {
+      setOperatorResult(null)
+      return
+    }
+    let cancelled = false
+    setOperatorComputing(true)
+    Promise.resolve(
+      METHODS[operatorMethod].run(
+        predictResult.homologs.map((h) => h.promoter),
+        operatorParams,
+      ),
     )
-    return extractOperators(predictResult.homologs, candidates, alignment)
+      .then((candidates) => extractOperators(predictResult.homologs, candidates, alignment))
+      .then((result) => {
+        if (cancelled) return
+        setOperatorResult(result)
+        setOperatorComputing(false)
+      })
+      .catch((e) => {
+        if (cancelled) return
+        console.error('operator extraction failed:', e)
+        setOperatorResult(null)
+        setOperatorComputing(false)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [predictResult, operatorMethod, operatorParams, alignment])
 
   async function handleSubmit({ force = false } = {}) {
@@ -176,6 +200,7 @@ export default function App() {
           promoter={promoter}
           coordinatesMethod={coordinatesMethod}
           alignment={alignment}
+          onClose={() => setDrawerOpen(false)}
           onChange={(patch) => {
             if (patch.blast) setBlast(patch.blast)
             if (patch.promoter) setPromoter(patch.promoter)
@@ -237,11 +262,13 @@ export default function App() {
 
           <PipelinePanel pipeline={pipeline} />
 
-          {predictResult && !pipeline.active && !operatorResult && (
+          {predictResult && !pipeline.active && !operatorComputing && !operatorResult && (
             <Alert severity="info">
               Pipeline complete. No operator candidates found with the selected method.
             </Alert>
           )}
+
+          {operatorComputing && <Alert severity="info">Computing alignment…</Alert>}
 
           <ResultsPanel result={operatorResult} homologs={predictResult?.homologs || []} />
 
