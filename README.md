@@ -54,6 +54,28 @@ node frontend/src/operator/__tests__/verify.mjs
 
 To regenerate fixtures after a Python-side change, recreate `backend/_dump_reference.py` from git history and run it (the script is a one-off and has been removed from the repo).
 
+Backend tests:
+
+```bash
+.venv/bin/python -m unittest discover -s backend -p 'test_*.py'
+```
+
+## Family precomputed caches
+
+Each family lives at `families/<key>/` with a tracked `family.json` manifest
+and a gitignored `predictions.jsonl` of cached predictions (one per
+representative protein, keyed by UniProt ID). Lookups are O(1) via an
+in-memory byte-offset index that rebuilds when the JSONL changes on disk.
+
+Endpoints:
+
+- `GET /api/families` — list configured families with their manifests.
+- `GET /api/cached-by-uniprot/{family}/{uniprot_id}` — direct lookup of a
+  cached prediction.
+
+Populating a family's `predictions.jsonl` is handled by a separate
+precompute pipeline (not in this PR).
+
 ## Production
 
 `npm run build` in `frontend/` produces `frontend/dist/`. Easiest deployment is to mount that directory as static files from FastAPI (not configured yet — uses two processes in dev).
