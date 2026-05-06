@@ -29,6 +29,7 @@ from src.fetch_promoter import fetch_promoter  # noqa: E402
 from src.troubleshoot import troubleshoot  # noqa: E402
 
 from . import cache
+from . import smart_lookup as smart_lookup_mod
 from .blast_remote import blast_against_nr
 from .schemas import PredictRequest
 
@@ -227,7 +228,17 @@ def run_pipeline_core(req: PredictRequest) -> dict:
 async def run_pipeline(req: PredictRequest) -> AsyncIterator[str]:
     """Run the full pipeline, yielding SSE-formatted strings."""
 
-    # Cache check
+    # 1. Smart-lookup pre-flight: BLAST input against precomputed family
+    #    representatives. If we hit a known protein above-threshold, return its
+    #    cached prediction with match metadata. `req.force` skips this.
+    if not req.force:
+        smart_hit = await asyncio.to_thread(smart_lookup_mod.lookup, req)
+        if smart_hit is not None:
+            payload = smart_lookup_mod.to_event_payload(smart_hit)
+            yield _sse("smart_lookup_hit", **payload)
+            return
+
+    # 2. Parameter-hash cache check (per-query exact-match cache).
     key = cache.compute_key(req)
     if not req.force:
         hit = cache.read(key)

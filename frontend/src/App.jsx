@@ -142,7 +142,15 @@ export default function App() {
 
     try {
       for await (const ev of runPipeline(req)) {
-        if (ev.type === 'cached') {
+        if (ev.type === 'smart_lookup_hit') {
+          setPredictResult(ev.result)
+          setCacheMeta({
+            matched_via: ev.matched_via,
+            record: ev.result,
+            fromCache: true,
+          })
+          setPipeline({ active: false, stages: {}, progress: null, error: null })
+        } else if (ev.type === 'cached') {
           setPredictResult(ev.result)
           setCacheMeta({
             cache_key: ev.cache_key,
@@ -248,6 +256,8 @@ export default function App() {
             <CacheBanner
               cacheKey={cacheMeta.cache_key}
               cachedAt={cacheMeta.cached_at}
+              matchedVia={cacheMeta.matched_via}
+              record={cacheMeta.record}
               onRerun={() => handleSubmit({ force: true })}
             />
           )}

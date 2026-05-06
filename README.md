@@ -100,6 +100,30 @@ If `SNOWPRINT_DIAMOND_DB` is unset, the live `/api/predict` and the
 precompute both fall back to the small `bHTH_RefSeq.dmnd` shipped under
 `databases/`.
 
+### Smart-lookup against precomputed family caches
+
+Before running the full pipeline, `/api/predict` BLASTs the query sequence
+against every family's `representatives.dmnd`. If the top hit clears the
+family's `smart_lookup` thresholds (`min_identity_pct` and `min_coverage_pct`
+in `family.json`; default 50/95), we return that representative's cached
+prediction immediately, wrapped with a `matched_via` block containing the
+family key, the matched UniProt ID, and the identity/coverage percentages.
+
+The frontend renders this in the cache banner: *"Matched cached
+representative P43506 (87 % identity, 99 % coverage) — family tetr.
+Characterized in groovDB ↗"* (or a list of papers for PaperBLAST-backed
+representatives, or no characterisation line for default-backed ones).
+
+The "Re-run with full BLAST" button on that banner sets `force=true` in the
+request, which bypasses both the smart-lookup *and* the parameter-hash
+cache, forcing a fresh pipeline run against whichever database is
+configured.
+
+The smart-lookup never runs when the family has no `representatives.dmnd`
+yet (i.e. before PR 2's precompute is finished). It also never runs when
+`force=true` — so existing caches and the parameter-hash flow still work
+exactly as before.
+
 ### Database choice in the live UI
 
 `/api/predict` accepts a `database` field (`"local_diamond"` by default,
