@@ -73,8 +73,100 @@ Endpoints:
 - `GET /api/cached-by-uniprot/{family}/{uniprot_id}` — direct lookup of a
   cached prediction.
 
-Populating a family's `predictions.jsonl` is handled by a separate
-precompute pipeline (not in this PR).
+### One-time: build a local NCBI nr Diamond DB
+
+The precompute BLASTs each representative against NCBI's full nr database. You
+need a local Diamond DB built from nr — this is a one-time, hours-long
+operation that produces a ~50 GB index.
+
+```bash
+# Pick somewhere with ~250 GB free for the download + intermediate + final DB.
+cd /path/to/big/disk
+
+# Download nr (gzipped FASTA, ~150 GB).
+curl -O https://ftp.ncbi.nlm.nih.gov/blast/db/FASTA/nr.gz
+
+# Build the Diamond DB (~hours; ~50 GB output).
+diamond makedb --in nr.gz -d nr
+```
+
+Then export the path before running the precompute:
+
+```bash
+export SNOWPRINT_DIAMOND_DB=/path/to/big/disk/nr.dmnd
+```
+
+If `SNOWPRINT_DIAMOND_DB` is unset, the live `/api/predict` and the
+precompute both fall back to the small `bHTH_RefSeq.dmnd` shipped under
+`databases/`.
+
+### One-time: download the groovDB dump
+
+groovDB-known regulators are preferred as cluster representatives. Download
+the full dump (a single JSON file, button on the
+[programmatic-access page](https://www.groov.bio/about/programmatic-access))
+and save it to `families/_resources/groovdb.json`. The precompute reads it
+into an in-memory `{uniprot_id: entry}` table.
+
+If the dump is missing the precompute still runs; representatives without a
+groovDB or PaperBLAST hit fall back to the MMseqs2 centroid with no
+characterisation evidence attached.
+
+### Running the precompute
+
+```bash
+# All stages, end-to-end (resumable: rerun is idempotent):
+python -m scripts.precompute_family tetr
+
+# A single stage:
+python -m scripts.precompute_family tetr --stage representatives
+
+# Smoke-test on a small slice (5 clusters):
+python -m scripts.precompute_family tetr --max-clusters 5
+
+# Re-run a stage that previously completed:
+python -m scripts.precompute_family tetr --stage cluster --force
+
+# Skip PaperBLAST (it's behind Cloudflare's JS challenge — you may need to
+# rerun representative selection later when that's resolved):
+python -m scripts.precompute_family tetr --no-paperblast
+```
+
+Stages, in order:
+
+1. **members** — fetch UniProt accessions annotated with the family's InterPro entry
+2. **sequences** — batch-fetch FASTA sequences for those accessions
+3. **cluster** — MMseqs2 cluster at 50 % identity (configurable via `family.json`)
+4. **representatives** — pick a rep per cluster: groovDB > PaperBLAST > MMseqs2 centroid
+5. **dmnd** — extract `representatives.fasta` and build `representatives.dmnd`
+6. **predict** — run the full Snowprint pipeline per rep, append to `predictions.jsonl`
+
+Each stage's output is a file in `families/<key>/`; the next stage picks it
+up. Crash-resume: rerunning the script skips any stage whose output already
+exists, and the `predict` stage resumes by scanning `predictions.jsonl` for
+already-written UniProt IDs.
+
+Run the tests:
+
+```bash
+.venv/bin/python -m unittest \
+    backend.test_families \
+    scripts.precompute.test_representatives \
+    scripts.precompute.test_other_stages
+```
+
+#### Known caveats
+
+- **PaperBLAST is behind Cloudflare.** Plain HTTP requests with a browser
+  User-Agent often get through, but the endpoint can flip to a JS challenge.
+  When that happens the precompute logs a warning and treats the cluster as
+  having no PaperBLAST evidence — the representative falls back to the
+  MMseqs2 centroid (or to a groovDB hit if present). Re-running the
+  `representatives` stage with `--force` once PaperBLAST is reachable will
+  pick up the literature.
+- **PaperBLAST HTML parsing is regex-based.** If their output format changes,
+  hits will silently stop being recognised; the cluster falls back to its
+  centroid. Tests cover the empty and challenge-page paths, not the format.
 
 ## Production
 

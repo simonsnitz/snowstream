@@ -1,3 +1,4 @@
+import os
 import subprocess
 import requests
 import json
@@ -60,8 +61,10 @@ def blast(acc, input_method, params, max_seqs):
     log = NamedTemporaryFile()
     SeqIO.write(SeqRecord(Seq(seq), id="temp"), query.name, "fasta")
 
-    # Select database to blast
-    diamond_db = "../databases/bHTH_RefSeq.dmnd"
+    # Select database to blast. Default is the small bHTH_RefSeq DB that ships
+    # with the project; the SNOWPRINT_DIAMOND_DB env var overrides it (used by
+    # the family precompute to point at a local NCBI nr Diamond DB).
+    diamond_db = os.environ.get("SNOWPRINT_DIAMOND_DB", "../databases/bHTH_RefSeq.dmnd")
     
     subprocess.call(f'diamond blastp -d {diamond_db} -q {query.name} -o {tmp.name} --outfmt 6 {flags} -b {memory_limit}'
                     f' --id {params["ident_cutoff"]} --query-cover {params["cov_cutoff"]} --max-target-seqs {max_seqs} >> {log.name} 2>&1' , shell=True)
