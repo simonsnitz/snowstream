@@ -1,0 +1,14 @@
+{
+  "key": "tetr",
+  "name": "TetR family",
+  "interpro_id": "IPR001647",
+  "groovdb_entry_prefix": "https://www.groov.bio/entry/TetR/",
+  "predictions_path": "predictions.jsonl",
+  "representatives_fasta": "representatives.fasta",
+  "representatives_dmnd": "representatives.dmnd",
+  "cluster_identity_threshold": 0.5,
+  "smart_lookup": {
+    "min_identity_pct": 50,
+    "min_coverage_pct": 95
+  }
+}
