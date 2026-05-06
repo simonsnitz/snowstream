@@ -19,7 +19,7 @@ import requests
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.blast import blast  # noqa: E402
+from src.blast import blast, accID2sequence, uniprotID2sequence  # noqa: E402
 from src.get_genome_coordinates import (  # noqa: E402
     get_genome_coordinates,
     get_genome_coordinates_batch,
@@ -29,6 +29,7 @@ from src.fetch_promoter import fetch_promoter  # noqa: E402
 from src.troubleshoot import troubleshoot  # noqa: E402
 
 from . import cache
+from .blast_remote import blast_against_nr
 from .schemas import PredictRequest
 
 
@@ -104,14 +105,39 @@ def _normalize_homolog(h: dict) -> dict:
 # so the SSE wrapper invokes them via asyncio.to_thread. ---
 
 
-def _blast_stage(req: PredictRequest):
-    """Run BLAST + UniProt info lookup. Returns (homologs, protein_info, error_or_none)."""
-    blast_df = blast(
-        req.input_value,
-        req.input_method,
-        req.blast_params.model_dump(),
-        500,
-    )
+def _resolve_query_sequence(req: PredictRequest) -> str | None:
+    """Fetch the protein sequence implied by `req`. Returns None on lookup failure."""
+    if req.input_method == "RefSeq":
+        return accID2sequence(req.input_value)
+    if req.input_method == "Uniprot":
+        return uniprotID2sequence(req.input_value)
+    return req.input_value
+
+
+def _blast_stage(req: PredictRequest, on_progress=None):
+    """Run BLAST + UniProt info lookup. Returns (homologs, protein_info, error_or_none).
+
+    Branches on `req.database`: the local Diamond DB (default) vs remote NCBI nr.
+    """
+    if req.database == "nr_remote":
+        seq = _resolve_query_sequence(req)
+        if not seq:
+            return [], None, {"kind": "input_lookup_failed", "message": f"could not resolve sequence for {req.input_value}"}
+        try:
+            blast_df = blast_against_nr(
+                seq,
+                req.blast_params.model_dump(),
+                on_progress=on_progress,
+            )
+        except (RuntimeError, TimeoutError) as exc:
+            return [], None, {"kind": "remote_blast_failed", "message": str(exc)}
+    else:
+        blast_df = blast(
+            req.input_value,
+            req.input_method,
+            req.blast_params.model_dump(),
+            500,
+        )
     if blast_df.empty:
         mode = None
         if req.input_method != "Protein sequence":
@@ -214,8 +240,27 @@ async def run_pipeline(req: PredictRequest) -> AsyncIterator[str]:
     os.chdir(PROJECT_ROOT)
     try:
         # === Stage 1: BLAST ===
-        yield _sse("stage_started", stage="blast")
-        homologs, protein_info, err = await asyncio.to_thread(_blast_stage, req)
+        yield _sse("stage_started", stage="blast", database=req.database)
+
+        # For remote nr we'll be polling NCBI for many minutes; use a heartbeat
+        # loop so the SSE connection stays alive and the user sees progress.
+        # For local diamond the inner call returns in seconds and we never tick.
+        blast_task = asyncio.create_task(asyncio.to_thread(_blast_stage, req))
+        elapsed = 0.0
+        heartbeat_interval = 15.0
+        while not blast_task.done():
+            try:
+                await asyncio.wait_for(asyncio.shield(blast_task), timeout=heartbeat_interval)
+            except asyncio.TimeoutError:
+                elapsed += heartbeat_interval
+                yield _sse(
+                    "progress",
+                    stage="blast",
+                    database=req.database,
+                    elapsed_seconds=int(elapsed),
+                    message="BLAST in progress",
+                )
+        homologs, protein_info, err = await blast_task
         if err is not None:
             yield _sse("error", stage="blast", **err)
             return

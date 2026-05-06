@@ -100,6 +100,22 @@ If `SNOWPRINT_DIAMOND_DB` is unset, the live `/api/predict` and the
 precompute both fall back to the small `bHTH_RefSeq.dmnd` shipped under
 `databases/`.
 
+### Database choice in the live UI
+
+`/api/predict` accepts a `database` field (`"local_diamond"` by default,
+`"nr_remote"` to BLAST against NCBI's nr remotely). The Advanced options
+drawer surfaces this as a radio in the BLAST section.
+
+The remote path submits a job to NCBI's BLAST URL API, polls every 30 s
+(emitting heartbeat SSE events so the connection stays alive), fetches
+the BLAST XML, and translates RefSeq accessions to UniProt accessions
+via UniProt's xref query. Hits without a UniProt mapping are dropped.
+Wall-clock per query is typically 5–30 minutes; if NCBI is slow it can
+exceed an hour, in which case the request times out and the user can
+retry. Closing the browser tab kills the SSE stream but the BLAST job
+continues to completion at NCBI — re-submitting the same query means
+re-running, since the cache key includes the `database` choice.
+
 ### One-time: download the groovDB dump
 
 groovDB-known regulators are preferred as cluster representatives. Download

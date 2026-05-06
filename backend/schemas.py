@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 
 InputMethod = Literal["RefSeq", "Uniprot", "Protein sequence"]
 CoordinatesMethod = Literal["batch", "individually"]
+Database = Literal["local_diamond", "nr_remote"]
 
 
 class BlastParams(BaseModel):
@@ -24,6 +25,7 @@ class PredictRequest(BaseModel):
     blast_params: BlastParams = BlastParams()
     promoter_params: PromoterParams = PromoterParams()
     get_coordinates_method: CoordinatesMethod = "batch"
+    database: Database = "local_diamond"
     force: bool = False
 
 

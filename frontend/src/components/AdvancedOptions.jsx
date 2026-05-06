@@ -35,6 +35,7 @@ export default function AdvancedOptions({
   blast,
   promoter,
   coordinatesMethod,
+  database,
   alignment,
   onChange,
   onClose,
@@ -84,6 +85,24 @@ export default function AdvancedOptions({
               min={10}
               max={100}
             />
+            <FormControl>
+              <FormLabel>Database</FormLabel>
+              <RadioGroup
+                value={database}
+                onChange={(e) => set('database', e.target.value)}
+              >
+                <FormControlLabel
+                  value="local_diamond"
+                  control={<Radio />}
+                  label="Local Diamond DB (fast)"
+                />
+                <FormControlLabel
+                  value="nr_remote"
+                  control={<Radio />}
+                  label="NCBI nr (remote, slow — 5–30 min)"
+                />
+              </RadioGroup>
+            </FormControl>
           </Stack>
         </AccordionDetails>
       </Accordion>

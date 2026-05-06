@@ -17,15 +17,18 @@ function StageRow({ label, status, progress }) {
     <Box>
       <Typography sx={{ color: colorByStatus[status] }}>
         {label}
-        {status === 'running' && progress
+        {status === 'running' && progress?.total
           ? ` — ${progress.current}/${progress.total}${progress.uniprot_id ? ` (${progress.uniprot_id})` : ''}`
+          : ''}
+        {status === 'running' && progress?.elapsed_seconds !== undefined
+          ? ` — ${progress.message || 'in progress'} (${progress.elapsed_seconds}s elapsed)`
           : ''}
         {status === 'done' && ' ✓'}
       </Typography>
       {status === 'running' && (
         <LinearProgress
-          variant={progress ? 'determinate' : 'indeterminate'}
-          value={progress ? Math.round((progress.current / Math.max(progress.total, 1)) * 100) : 0}
+          variant={progress?.total ? 'determinate' : 'indeterminate'}
+          value={progress?.total ? Math.round((progress.current / Math.max(progress.total, 1)) * 100) : 0}
         />
       )}
     </Box>
