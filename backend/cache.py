@@ -11,12 +11,18 @@ CACHE_DIR = Path(__file__).resolve().parent.parent / "cache"
 
 def _canonical_input(req: PredictRequest) -> dict:
     # Only fields that affect the output. get_coordinates_method does not.
-    return {
+    # `database` is intentionally only included when it differs from the
+    # default — so caches written before the database choice was introduced
+    # remain reachable for `database="local_diamond"` requests.
+    payload: dict = {
         "input_method": req.input_method,
         "input_value": req.input_value,
         "blast_params": req.blast_params.model_dump(),
         "promoter_params": req.promoter_params.model_dump(),
     }
+    if req.database != "local_diamond":
+        payload["database"] = req.database
+    return payload
 
 
 def compute_key(req: PredictRequest) -> str:

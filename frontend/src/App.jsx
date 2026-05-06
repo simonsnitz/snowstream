@@ -38,6 +38,7 @@ export default function App() {
   const [blast, setBlast] = useState(DEFAULT_BLAST)
   const [promoter, setPromoter] = useState(DEFAULT_PROMOTER)
   const [coordinatesMethod, setCoordinatesMethod] = useState('batch')
+  const [database, setDatabase] = useState('local_diamond')
   const [operatorMethod, setOperatorMethod] = useState(DEFAULT_METHOD)
   // Keep params per-method so user input (e.g. "Sequence to align") survives
   // toggling between methods.
@@ -72,6 +73,7 @@ export default function App() {
         if (hit.input.blast_params) setBlast(hit.input.blast_params)
         if (hit.input.promoter_params) setPromoter(hit.input.promoter_params)
         if (hit.input.get_coordinates_method) setCoordinatesMethod(hit.input.get_coordinates_method)
+        if (hit.input.database) setDatabase(hit.input.database)
       }
     })
   }, [])
@@ -134,6 +136,7 @@ export default function App() {
       blast_params: blast,
       promoter_params: promoter,
       get_coordinates_method: coordinatesMethod,
+      database,
       force,
     }
 
@@ -199,12 +202,14 @@ export default function App() {
           blast={blast}
           promoter={promoter}
           coordinatesMethod={coordinatesMethod}
+          database={database}
           alignment={alignment}
           onClose={() => setDrawerOpen(false)}
           onChange={(patch) => {
             if (patch.blast) setBlast(patch.blast)
             if (patch.promoter) setPromoter(patch.promoter)
             if (patch.coordinatesMethod) setCoordinatesMethod(patch.coordinatesMethod)
+            if (patch.database) setDatabase(patch.database)
             if (patch.alignment) setAlignment(patch.alignment)
           }}
         />
