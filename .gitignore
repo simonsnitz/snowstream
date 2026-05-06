@@ -1,1 +1,19 @@
 snowprint-venv/
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+.streamlit/secrets.toml
+
+# Local cache (per-query JSON results)
+cache/
+
+# Frontend build artifacts
+frontend/node_modules/
+frontend/dist/
+
+# Untracked working outputs from streamlit runs
+blast.json
+genome_coordinates.json
+operators.json
+src/test_msa/
