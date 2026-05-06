@@ -99,6 +99,105 @@ def _normalize_homolog(h: dict) -> dict:
     }
 
 
+# --- Per-stage helpers (pure-sync; reused by both run_pipeline and
+# run_pipeline_core). They each touch the network or call external binaries,
+# so the SSE wrapper invokes them via asyncio.to_thread. ---
+
+
+def _blast_stage(req: PredictRequest):
+    """Run BLAST + UniProt info lookup. Returns (homologs, protein_info, error_or_none)."""
+    blast_df = blast(
+        req.input_value,
+        req.input_method,
+        req.blast_params.model_dump(),
+        500,
+    )
+    if blast_df.empty:
+        mode = None
+        if req.input_method != "Protein sequence":
+            mode, _ = troubleshoot(req.input_method, req.input_value)
+        return (
+            [],
+            None,
+            {
+                "kind": mode or "no_results",
+                "message": (
+                    "Protein is not from Bacteria. Snowprint only works for bacterial proteins."
+                    if mode == "not bacteria"
+                    else "BLAST returned no results."
+                ),
+            },
+        )
+    homologs = (
+        _filter_redundant(blast_df)
+        if req.blast_params.filter_redundant
+        else _all_homologs(blast_df)
+    )
+    homologs = homologs[: req.blast_params.max_homologs]
+    protein_info = _uniprot_protein_info(blast_df.iloc[0]["Uniprot Id"])
+    return homologs, protein_info, None
+
+
+def _coords_one(homolog: dict) -> dict | None:
+    return get_genome_coordinates(homolog)
+
+
+def _coords_batch(homologs: list[dict]) -> list[dict] | None:
+    return get_genome_coordinates_batch(homologs)
+
+
+def _operon_and_promoter(homolog: dict, promoter_params: dict) -> dict:
+    homolog["operon"] = acc2operon(homolog)
+    try:
+        homolog["promoter"] = fetch_promoter(homolog["operon"], promoter_params)
+    except Exception:
+        homolog["promoter"] = None
+    return homolog
+
+
+def run_pipeline_core(req: PredictRequest) -> dict:
+    """Synchronous full-pipeline run. No SSE, no caching.
+
+    Returns either {input, protein_info, homologs} on success, or
+    {error: {stage, kind, message}} on failure. Used by the precompute
+    script so it can drive the pipeline without parsing SSE or polluting
+    the per-query parameter-hash cache.
+    """
+    prev_cwd = os.getcwd()
+    os.chdir(PROJECT_ROOT)
+    try:
+        homologs, protein_info, err = _blast_stage(req)
+        if err is not None:
+            return {"error": {"stage": "blast", **err}}
+
+        if req.get_coordinates_method == "batch":
+            result = _coords_batch(homologs)
+            if result is None:
+                return {
+                    "error": {
+                        "stage": "coordinates",
+                        "kind": "batch_failed",
+                        "message": "Failed fetching genome coordinates in batch mode.",
+                    }
+                }
+            homologs = [h for h in result if h is not None]
+        else:
+            updated = [_coords_one(h) for h in homologs]
+            homologs = [h for h in updated if h is not None]
+        homologs = [h for h in homologs if "Genome" in h]
+
+        promoter_params = req.promoter_params.model_dump()
+        homologs = [_operon_and_promoter(h, promoter_params) for h in homologs]
+
+        return {
+            "input": req.model_dump(),
+            "protein_info": protein_info,
+            "homologs": [_normalize_homolog(h) for h in homologs],
+        }
+    finally:
+        os.chdir(prev_cwd)
+
+
 async def run_pipeline(req: PredictRequest) -> AsyncIterator[str]:
     """Run the full pipeline, yielding SSE-formatted strings."""
 
@@ -116,43 +215,10 @@ async def run_pipeline(req: PredictRequest) -> AsyncIterator[str]:
     try:
         # === Stage 1: BLAST ===
         yield _sse("stage_started", stage="blast")
-        blast_df = await asyncio.to_thread(
-            blast,
-            req.input_value,
-            req.input_method,
-            req.blast_params.model_dump(),
-            500,
-        )
-
-        if blast_df.empty:
-            mode = None
-            if req.input_method != "Protein sequence":
-                mode, _ = await asyncio.to_thread(
-                    troubleshoot, req.input_method, req.input_value
-                )
-            yield _sse(
-                "error",
-                stage="blast",
-                kind=mode or "no_results",
-                message=(
-                    "Protein is not from Bacteria. Snowprint only works for bacterial proteins."
-                    if mode == "not bacteria"
-                    else "BLAST returned no results."
-                ),
-            )
+        homologs, protein_info, err = await asyncio.to_thread(_blast_stage, req)
+        if err is not None:
+            yield _sse("error", stage="blast", **err)
             return
-
-        homologs = (
-            _filter_redundant(blast_df)
-            if req.blast_params.filter_redundant
-            else _all_homologs(blast_df)
-        )
-        homologs = homologs[: req.blast_params.max_homologs]
-
-        protein_info = await asyncio.to_thread(
-            _uniprot_protein_info, blast_df.iloc[0]["Uniprot Id"]
-        )
-
         yield _sse(
             "stage_done",
             stage="blast",
@@ -162,9 +228,8 @@ async def run_pipeline(req: PredictRequest) -> AsyncIterator[str]:
 
         # === Stage 2: Genome coordinates ===
         yield _sse("stage_started", stage="coordinates")
-
         if req.get_coordinates_method == "batch":
-            result = await asyncio.to_thread(get_genome_coordinates_batch, homologs)
+            result = await asyncio.to_thread(_coords_batch, homologs)
             if result is None:
                 yield _sse(
                     "error",
@@ -184,7 +249,7 @@ async def run_pipeline(req: PredictRequest) -> AsyncIterator[str]:
                     total=len(homologs),
                     uniprot_id=h["Uniprot Id"],
                 )
-                updated.append(await asyncio.to_thread(get_genome_coordinates, h))
+                updated.append(await asyncio.to_thread(_coords_one, h))
             homologs = [h for h in updated if h is not None]
 
         homologs = [h for h in homologs if "Genome" in h]
@@ -196,6 +261,7 @@ async def run_pipeline(req: PredictRequest) -> AsyncIterator[str]:
 
         # === Stage 3: Operons + promoters ===
         yield _sse("stage_started", stage="operons")
+        promoter_params = req.promoter_params.model_dump()
         for i, h in enumerate(homologs):
             yield _sse(
                 "progress",
@@ -204,13 +270,7 @@ async def run_pipeline(req: PredictRequest) -> AsyncIterator[str]:
                 total=len(homologs),
                 uniprot_id=h["Uniprot Id"],
             )
-            h["operon"] = await asyncio.to_thread(acc2operon, h)
-            try:
-                h["promoter"] = await asyncio.to_thread(
-                    fetch_promoter, h["operon"], req.promoter_params.model_dump()
-                )
-            except Exception:
-                h["promoter"] = None
+            await asyncio.to_thread(_operon_and_promoter, h, promoter_params)
 
         result_payload = {
             "input": req.model_dump(),
