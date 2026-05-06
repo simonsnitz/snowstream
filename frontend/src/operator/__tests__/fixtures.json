@@ -1,0 +1,282 @@
+{
+  "smith_waterman": [
+    {
+      "case": "exact match",
+      "a": "ACGTACGT",
+      "b": "ACGTACGT",
+      "params": {
+        "match": 2,
+        "mismatch": -0.5,
+        "gap_open": -100,
+        "gap_extend": 0
+      },
+      "expected": {
+        "alignedA": "ACGTACGT",
+        "alignedB": "ACGTACGT",
+        "score": 16.0,
+        "start": 0,
+        "end": 8
+      }
+    },
+    {
+      "case": "embedded match",
+      "a": "TTTACGTACGTGGG",
+      "b": "ACGTACGT",
+      "params": {
+        "match": 2,
+        "mismatch": -0.5,
+        "gap_open": -100,
+        "gap_extend": 0
+      },
+      "expected": {
+        "alignedA": "TTTACGTACGTGGG",
+        "alignedB": "---ACGTACGT---",
+        "score": 16.0,
+        "start": 3,
+        "end": 11
+      }
+    },
+    {
+      "case": "with mismatches",
+      "a": "ACGTAGGTACGT",
+      "b": "ACGTACGTACGT",
+      "params": {
+        "match": 2,
+        "mismatch": -0.5,
+        "gap_open": -100,
+        "gap_extend": 0
+      },
+      "expected": {
+        "alignedA": "ACGTAGGTACGT",
+        "alignedB": "ACGTACGTACGT",
+        "score": 21.5,
+        "start": 0,
+        "end": 12
+      }
+    },
+    {
+      "case": "with gap (high open penalty)",
+      "a": "ACGTACGTACGT",
+      "b": "ACGTAACGT",
+      "params": {
+        "match": 2,
+        "mismatch": -0.5,
+        "gap_open": -100,
+        "gap_extend": 0
+      },
+      "expected": {
+        "alignedA": "ACGTACGTACGT-",
+        "alignedB": "----ACGTAACGT",
+        "score": 10.0,
+        "start": 4,
+        "end": 9
+      }
+    },
+    {
+      "case": "with gap (low open penalty)",
+      "a": "ACGTACGTACGT",
+      "b": "ACGTAACGT",
+      "params": {
+        "match": 2,
+        "mismatch": -0.5,
+        "gap_open": -2,
+        "gap_extend": -1
+      },
+      "expected": {
+        "alignedA": "ACGTACGTA-CGT",
+        "alignedB": "----ACGTAACGT",
+        "score": 14.0,
+        "start": 4,
+        "end": 13
+      }
+    }
+  ],
+  "find_operator_in_intergenic": {
+    "intergenic": "AAACTGATGCAATGTCGGCTACGTAATGCATGCAGCAGTACATTACGTAGCCGACATTGCATCAGTTTAA",
+    "operator": "AATGCATGCAGCAGTACA",
+    "params": {
+      "extension_length": 5,
+      "align_match": 2,
+      "align_mismatch": -0.5,
+      "gap_open": -100,
+      "gap_extend": 0
+    },
+    "expected": {
+      "operator": "tacgtAATGCATGCAGCAGTACAttacg",
+      "score": 36.0
+    }
+  },
+  "find_best_palindrome": {
+    "intergenic": "AAACTGATGCAATGTCGGCTACGTAATGCATGCAGCAGTACATTACGTAGCCGACATTGCATCAGTTTAA",
+    "shortest": 5,
+    "longest": 12,
+    "win_score": 2,
+    "loss_score": -2,
+    "spacer_penalty": {
+      "0": 4,
+      "1": 4,
+      "2": 4,
+      "3": 4,
+      "4": 4,
+      "5": 2,
+      "6": 2,
+      "7": 0,
+      "8": 0,
+      "9": -2,
+      "10": -2,
+      "11": -4,
+      "12": -4,
+      "13": -6,
+      "14": -6,
+      "15": -8,
+      "16": -8,
+      "17": -10,
+      "18": -10,
+      "19": -12,
+      "20": -12
+    },
+    "expected": [
+      {
+        "seq": "GCTACGTAATGcatgcagcagtaCATTACGTAGC",
+        "score": 18
+      },
+      {
+        "seq": "TACGTAATGCAtgcagcagTACATTACGTA",
+        "score": 18
+      }
+    ]
+  },
+  "get_consensus": {
+    "metrics": [
+      {
+        "Uniprot Id": "X",
+        "Predicted operator": "ATCGTAGCTA",
+        "Align score": 5
+      },
+      {
+        "Uniprot Id": "Y",
+        "Predicted operator": "ATGGTAGCTA",
+        "Align score": 5
+      },
+      {
+        "Uniprot Id": "Z",
+        "Predicted operator": "ATCGTAGCTT",
+        "Align score": 5
+      },
+      {
+        "Uniprot Id": "Q",
+        "Predicted operator": "ATCGTAGCAA",
+        "Align score": 0
+      }
+    ],
+    "expected": {
+      "motif_data": [
+        {
+          "base": "A",
+          "score": 1.0
+        },
+        {
+          "base": "T",
+          "score": 1.0
+        },
+        {
+          "base": "C",
+          "score": 0.67
+        },
+        {
+          "base": "G",
+          "score": 1.0
+        },
+        {
+          "base": "T",
+          "score": 1.0
+        },
+        {
+          "base": "A",
+          "score": 1.0
+        },
+        {
+          "base": "G",
+          "score": 1.0
+        },
+        {
+          "base": "C",
+          "score": 1.0
+        },
+        {
+          "base": "T",
+          "score": 1.0
+        },
+        {
+          "base": "A",
+          "score": 0.67
+        }
+      ],
+      "num_seqs": 3
+    },
+    "score_input": "ATCGTAGCTA",
+    "expected_score": 88.978,
+    "expected_frequency_matrix": [
+      [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      [
+        0.0,
+        0.75,
+        0.25,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ],
+      [
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.25,
+        0.0,
+        0.0,
+        0.75
+      ],
+      [
+        0.75,
+        0.0,
+        0.0,
+        0.25
+      ]
+    ]
+  }
+}
