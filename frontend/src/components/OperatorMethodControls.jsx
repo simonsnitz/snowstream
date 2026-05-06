@@ -54,7 +54,6 @@ export default function OperatorMethodControls({
                 value={key}
                 control={<Radio size="small" />}
                 label={m.label}
-                disabled={key === 'biomsa'}
               />
             ))}
           </RadioGroup>
@@ -93,6 +92,29 @@ export default function OperatorMethodControls({
               }
               min={11}
               max={40}
+            />
+          </Stack>
+        )}
+
+        {operatorMethod === 'biomsa' && (
+          <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+            <NumField
+              label="Min operator length"
+              value={operatorParams.min_operator_length}
+              onChange={(v) =>
+                onParamsChange({ ...operatorParams, min_operator_length: v })
+              }
+              min={5}
+              max={40}
+            />
+            <NumField
+              label="Max operator length"
+              value={operatorParams.max_operator_length}
+              onChange={(v) =>
+                onParamsChange({ ...operatorParams, max_operator_length: v })
+              }
+              min={5}
+              max={60}
             />
           </Stack>
         )}

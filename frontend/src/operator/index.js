@@ -3,13 +3,11 @@
 // register it here.
 
 import * as invertedRepeats from './methods/invertedRepeats.js'
-import * as scanRegion from './methods/scanRegion.js'
 import * as alignSequence from './methods/alignSequence.js'
 import * as biomsa from './methods/biomsa.js'
 
 export const METHODS = {
   invertedRepeats,
-  scanRegion,
   alignSequence,
   biomsa,
 }
