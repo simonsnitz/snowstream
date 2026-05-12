@@ -13,12 +13,14 @@ from pprint import pprint
 import pandas as pd
 import streamlit as st
 
+from src.http_utils import ncbi_get, http_get
+
 
 
     # Input protein accession ID, output sequence in fasta format
 def accID2sequence(accID: str):
     URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi/?db=protein&id="+accID+"&rettype=fasta"
-    response = requests.get(URL)
+    response = ncbi_get(URL)
     if response.ok:
         fasta = response.text.split("\n")
         fasta = [i for i in fasta if len(i) != 0]
@@ -32,7 +34,7 @@ def accID2sequence(accID: str):
 
 def uniprotID2sequence(ID: str):
     URL = f"https://rest.uniprot.org/uniprotkb/{ID}?format=json&fields=sequence"
-    response = requests.get(URL)
+    response = http_get(URL)
     if response.ok:
         seq = json.loads(response.text)["sequence"]["value"]
         return seq

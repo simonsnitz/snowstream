@@ -7,7 +7,10 @@ loop isn't blocked.
 import asyncio
 import json
 import os
+import random
 import sys
+import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import AsyncIterator
 
@@ -31,7 +34,7 @@ from src.troubleshoot import troubleshoot  # noqa: E402
 from . import cache
 from . import smart_lookup as smart_lookup_mod
 from .blast_remote import blast_against_nr
-from .schemas import PredictRequest
+from .schemas import PredictRequest, PromoterParams
 
 
 def _sse(event_type: str, **payload) -> str:
@@ -169,8 +172,19 @@ def _coords_one(homolog: dict) -> dict | None:
     return get_genome_coordinates(homolog)
 
 
-def _coords_batch(homologs: list[dict]) -> list[dict] | None:
-    return get_genome_coordinates_batch(homologs)
+def _coords_batch(homologs: list[dict], max_attempts: int = 4) -> list[dict] | None:
+    """Wrap the NCBI eFetch batch call with backoff for transient failures
+    (rate-limiting, brief network issues). Returns None only after all retries."""
+    for attempt in range(max_attempts):
+        try:
+            result = get_genome_coordinates_batch(homologs)
+            if result is not None:
+                return result
+        except Exception:
+            pass
+        if attempt < max_attempts - 1:
+            time.sleep((1.5 ** attempt) + random.uniform(0, 0.5))
+    return None
 
 
 def _operon_and_promoter(homolog: dict, promoter_params: dict) -> dict:
@@ -180,6 +194,42 @@ def _operon_and_promoter(homolog: dict, promoter_params: dict) -> dict:
     except Exception:
         homolog["promoter"] = None
     return homolog
+
+
+_OPERON_WORKERS = int(os.environ.get("SNOWPRINT_OPERON_WORKERS", "0"))
+
+
+def _post_blast(
+    homologs: list[dict],
+    get_coordinates_method: str,
+    promoter_params: dict,
+) -> tuple[list[dict] | None, dict | None]:
+    """Coords → operon → promoter. Returns (homologs, error_or_none).
+
+    If `SNOWPRINT_OPERON_WORKERS` > 1, the per-homolog operon+promoter calls
+    run in parallel (still throttled by the global NCBI semaphore). This is
+    the main win for max-cluster reps with 100 homologs.
+    """
+    if get_coordinates_method == "batch":
+        result = _coords_batch(homologs)
+        if result is None:
+            return None, {
+                "stage": "coordinates",
+                "kind": "batch_failed",
+                "message": "Failed fetching genome coordinates in batch mode.",
+            }
+        homologs = [h for h in result if h is not None]
+    else:
+        updated = [_coords_one(h) for h in homologs]
+        homologs = [h for h in updated if h is not None]
+    homologs = [h for h in homologs if "Genome" in h]
+
+    if _OPERON_WORKERS > 1 and len(homologs) > 1:
+        with ThreadPoolExecutor(max_workers=_OPERON_WORKERS) as pool:
+            homologs = list(pool.map(lambda h: _operon_and_promoter(h, promoter_params), homologs))
+    else:
+        homologs = [_operon_and_promoter(h, promoter_params) for h in homologs]
+    return homologs, None
 
 
 def run_pipeline_core(req: PredictRequest) -> dict:
@@ -197,24 +247,11 @@ def run_pipeline_core(req: PredictRequest) -> dict:
         if err is not None:
             return {"error": {"stage": "blast", **err}}
 
-        if req.get_coordinates_method == "batch":
-            result = _coords_batch(homologs)
-            if result is None:
-                return {
-                    "error": {
-                        "stage": "coordinates",
-                        "kind": "batch_failed",
-                        "message": "Failed fetching genome coordinates in batch mode.",
-                    }
-                }
-            homologs = [h for h in result if h is not None]
-        else:
-            updated = [_coords_one(h) for h in homologs]
-            homologs = [h for h in updated if h is not None]
-        homologs = [h for h in homologs if "Genome" in h]
-
-        promoter_params = req.promoter_params.model_dump()
-        homologs = [_operon_and_promoter(h, promoter_params) for h in homologs]
+        homologs, err = _post_blast(
+            homologs, req.get_coordinates_method, req.promoter_params.model_dump()
+        )
+        if err is not None:
+            return {"error": err}
 
         return {
             "input": req.model_dump(),
@@ -223,6 +260,29 @@ def run_pipeline_core(req: PredictRequest) -> dict:
         }
     finally:
         os.chdir(prev_cwd)
+
+
+def run_pipeline_from_homologs(
+    homologs: list[dict],
+    get_coordinates_method: str = "batch",
+    promoter_params: dict | None = None,
+) -> dict:
+    """Pipeline starting from pre-computed homologs (BLAST stage skipped).
+
+    `homologs` items must be shaped like {"Uniprot Id", "identity", "coverage"}
+    — the internal format produced by the BLAST stage. Returns
+    {homologs: [...]} on success or {error: {...}} on failure.
+
+    Unlike `run_pipeline_core`, this does NOT chdir — BLAST is skipped so the
+    `../databases/` relative-path concern doesn't apply, and chdir would be
+    unsafe in multi-threaded callers (it's process-wide state).
+    """
+    if promoter_params is None:
+        promoter_params = PromoterParams().model_dump()
+    result, err = _post_blast(homologs, get_coordinates_method, promoter_params)
+    if err is not None:
+        return {"error": err}
+    return {"homologs": [_normalize_homolog(h) for h in result]}
 
 
 async def run_pipeline(req: PredictRequest) -> AsyncIterator[str]:

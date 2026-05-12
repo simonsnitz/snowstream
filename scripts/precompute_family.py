@@ -45,6 +45,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.precompute import (  # noqa: E402
     cluster as cluster_mod,
+    cluster_search as cluster_search_mod,
     dmnd as dmnd_mod,
     groovdb as groovdb_mod,
     interpro as interpro_mod,
@@ -60,6 +61,7 @@ ALL_STAGES = (
     "cluster",
     "representatives",
     "dmnd",
+    "cluster_search",
     "predict",
 )
 
@@ -152,18 +154,34 @@ def stage_dmnd(_manifest: dict, fam_dir: Path, force: bool) -> None:
     )
 
 
-def stage_predict(_manifest: dict, fam_dir: Path, max_clusters: int | None) -> None:
+def stage_cluster_search(_manifest: dict, fam_dir: Path, force: bool, max_clusters: int | None) -> None:
+    representatives = representatives_mod.read_representatives(fam_dir / "representatives.json")
+    if max_clusters is not None:
+        representatives = representatives[:max_clusters]
+    cluster_search_mod.search_cluster_homologs(
+        representatives_fasta=fam_dir / "representatives.fasta",
+        members_fasta=fam_dir / "members.fasta",
+        representatives=representatives,
+        output_path=fam_dir / "cluster_homologs.json",
+        force=force,
+    )
+
+
+def stage_predict(_manifest: dict, fam_dir: Path, max_clusters: int | None, workers: int) -> None:
     representatives = representatives_mod.read_representatives(fam_dir / "representatives.json")
     sequences = _read_sequences(fam_dir / "members.fasta")
+    cluster_homologs = json.loads((fam_dir / "cluster_homologs.json").read_text())
 
     def progress(i: int, n: int, uid: str, status: str) -> None:
         logging.info("[predict %d/%d] %s — %s", i + 1, n, uid, status)
 
-    predict_mod.predict_all(
+    predict_mod.predict_from_clusters(
         representatives=representatives,
         sequences=sequences,
+        cluster_homologs=cluster_homologs,
         jsonl_path=fam_dir / "predictions.jsonl",
         max_entries=max_clusters,
+        workers=workers,
         on_progress=progress,
     )
 
@@ -217,6 +235,12 @@ def main() -> None:
         action="store_false",
         help="Skip PaperBLAST queries during representative selection",
     )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        help="Parallel workers for the predict stage (default: 1, sequential)",
+    )
     parser.add_argument("-v", "--verbose", action="store_true", help="DEBUG-level logging")
     args = parser.parse_args()
 
@@ -242,8 +266,10 @@ def main() -> None:
             stage_representatives(manifest, fam_dir, args.force, args.use_paperblast, args.max_clusters)
         elif name == "dmnd":
             stage_dmnd(manifest, fam_dir, args.force)
+        elif name == "cluster_search":
+            stage_cluster_search(manifest, fam_dir, args.force, args.max_clusters)
         elif name == "predict":
-            stage_predict(manifest, fam_dir, args.max_clusters)
+            stage_predict(manifest, fam_dir, args.max_clusters, args.workers)
 
 
 if __name__ == "__main__":

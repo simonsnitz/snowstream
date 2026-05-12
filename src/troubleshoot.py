@@ -4,6 +4,7 @@ import os
 os.path.dirname("..") 
 from src.accID2operon import acc2operon
 from src.get_genome_coordinates import get_genome_coordinates_refseq, get_genome_coordinates
+from src.http_utils import http_get
 
 
 def troubleshoot(input_type, acc):
@@ -16,7 +17,7 @@ def troubleshoot(input_type, acc):
 
     elif input_type == "Uniprot":
         URL = f"https://rest.uniprot.org/uniprotkb/{acc}?format=json&fields=xref_refseq,organism_name"
-        response = requests.get(URL)
+        response = http_get(URL)
         if response.ok:
             data = json.loads(response.text)
             domain = data["organism"]["lineage"][0]

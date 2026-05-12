@@ -3,6 +3,8 @@ import json
 import streamlit as st
 from pprint import pprint
 
+from src.http_utils import ncbi_get
+
 
 @st.cache_data(show_spinner=False)
 def fetch_promoter(homolog_dict, params):
@@ -75,7 +77,7 @@ def fetch_promoter(homolog_dict, params):
 
 
     URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id="+str(genome_id)+"&seq_start="+str(startPos)+"&seq_stop="+str(stopPos)+"&strand=1&rettype=fasta"
-    response = requests.get(URL)
+    response = ncbi_get(URL)
 
     if response.ok:
         intergenic = response.text
