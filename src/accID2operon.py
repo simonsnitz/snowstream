@@ -30,25 +30,27 @@ def NC2genome(genome_id, startPos, stopPos):
 
 def getGenes(genome_id, startPos, stopPos):
 
-    # Fetch the genome fragment
+    # Fetch the genome fragment. Try a few flanking windows; first that
+    # succeeds wins. If all fail we return (None, None) so acc2operon
+    # treats this homolog the same as a "regulator not found" miss.
     base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore"
-    try:
-        response = ncbi_get(base_url+"&id="+str(genome_id)+"&seq_start="+str(startPos-10000)+"&seq_stop="+str(stopPos+10000)+"&rettype=fasta_cds_aa")
-        genome = response.text.split("\n")
-    except:
+    windows = [
+        (startPos - 10000, stopPos + 10000),
+        (startPos - 5000, stopPos + 5000),
+        (startPos, stopPos + 5000),
+        (startPos - 5000, stopPos),
+    ]
+    genome = None
+    for s, e in windows:
         try:
-            response = ncbi_get(base_url+"&id="+str(genome_id)+"&seq_start="+str(startPos-5000)+"&seq_stop="+str(stopPos+5000)+"&rettype=fasta_cds_aa")
+            response = ncbi_get(f"{base_url}&id={genome_id}&seq_start={s}&seq_stop={e}&rettype=fasta_cds_aa")
             genome = response.text.split("\n")
-        except: 
-            try:
-                response = ncbi_get(base_url+"&id="+str(genome_id)+"&seq_start="+str(startPos)+"&seq_stop="+str(stopPos+5000)+"&rettype=fasta_cds_aa")
-                genome = response.text.split("\n")
-            except:
-                try:
-                    response = ncbi_get(base_url+"&id="+str(genome_id)+"&seq_start="+str(startPos-5000)+"&seq_stop="+str(stopPos)+"&rettype=fasta_cds_aa")
-                    genome = response.text.split("\n")
-                except:
-                    print("error fetching the genome fragment")
+            break
+        except Exception:
+            continue
+    if genome is None:
+        print("error fetching the genome fragment")
+        return None, None
 
 
     re1 = re.compile(str(startPos))
