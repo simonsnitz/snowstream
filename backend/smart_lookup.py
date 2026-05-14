@@ -54,16 +54,19 @@ def _resolve_query_sequence(req: PredictRequest) -> Optional[str]:
     return req.input_value
 
 
-def _diamond_top_hit(
+def _diamond_hits(
     query_seq: str,
     dmnd_path: Path,
     diamond_bin: str = "diamond",
-) -> Optional[dict]:
-    """Run `diamond blastp` for a single query sequence; return the best hit
-    as `{uniprot_id, identity_pct, coverage_pct}` or None if there are no hits.
+    max_target_seqs: int = 25,
+) -> list[dict]:
+    """Run `diamond blastp` for a single query sequence; return up to
+    `max_target_seqs` hits in diamond's bit-score order as a list of
+    `{uniprot_id, identity_pct, coverage_pct}` dicts. Empty list on
+    failure or no hits — the caller filters by family thresholds.
     """
     if not dmnd_path.exists():
-        return None
+        return []
 
     query_path = None
     output_path = None
@@ -88,27 +91,34 @@ def _diamond_top_hit(
             "pident",
             "qcovhsp",
             "--max-target-seqs",
-            "1",
+            str(max_target_seqs),
             "--quiet",
         ]
         try:
             subprocess.run(cmd, check=True, capture_output=True, timeout=60)
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
             log.warning("smart-lookup diamond failed for %s: %s", dmnd_path, exc)
-            return None
+            return []
 
-        line = output_path.read_text().splitlines()
-        if not line:
-            return None
-        first = line[0].strip()
-        if not first:
-            return None
-        sseqid, pident, qcovhsp = first.split("\t")[:3]
-        return {
-            "uniprot_id": sseqid,
-            "identity_pct": float(pident),
-            "coverage_pct": float(qcovhsp),
-        }
+        hits: list[dict] = []
+        for line in output_path.read_text().splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split("\t")
+            if len(parts) < 3:
+                continue
+            try:
+                hits.append(
+                    {
+                        "uniprot_id": parts[0],
+                        "identity_pct": float(parts[1]),
+                        "coverage_pct": float(parts[2]),
+                    }
+                )
+            except ValueError:
+                continue
+        return hits
     finally:
         for p in (query_path, output_path):
             if p is not None and p.exists():
@@ -135,8 +145,13 @@ def lookup(
       * `req.force` is true (caller asked for a fresh run),
       * the input sequence can't be resolved,
       * no family's `representatives.dmnd` exists yet,
-      * the top hit doesn't clear that family's thresholds,
+      * no diamond hit clears that family's thresholds,
       * the matched UniProt ID isn't in the family's predictions.jsonl.
+
+    We pull the top N diamond hits (not just the top-1) because diamond
+    ranks by bit score: a partial 99% match can outrank a full-coverage 70%
+    match. We need the first hit that clears BOTH identity AND coverage
+    thresholds, which isn't always the top one.
     """
     if req.force:
         return None
@@ -154,30 +169,28 @@ def lookup(
         prev_cwd = os.getcwd()
         os.chdir(PROJECT_ROOT)
         try:
-            hit = _diamond_top_hit(seq, family.representatives_dmnd)
+            hits = _diamond_hits(seq, family.representatives_dmnd)
         finally:
             os.chdir(prev_cwd)
-        if hit is None:
-            continue
-        if not _meets_thresholds(hit, family):
-            continue
 
-        record = registry.lookup(family.key, hit["uniprot_id"])
-        if record is None:
-            log.warning(
-                "smart-lookup hit %s in family %s but no record in predictions.jsonl",
-                hit["uniprot_id"],
-                family.key,
+        for hit in hits:
+            if not _meets_thresholds(hit, family):
+                continue
+            record = registry.lookup(family.key, hit["uniprot_id"])
+            if record is None:
+                log.warning(
+                    "smart-lookup hit %s in family %s but no record in predictions.jsonl",
+                    hit["uniprot_id"],
+                    family.key,
+                )
+                continue
+            return SmartLookupHit(
+                family_key=family.key,
+                uniprot_id=hit["uniprot_id"],
+                identity_pct=hit["identity_pct"],
+                coverage_pct=hit["coverage_pct"],
+                record=record,
             )
-            continue
-
-        return SmartLookupHit(
-            family_key=family.key,
-            uniprot_id=hit["uniprot_id"],
-            identity_pct=hit["identity_pct"],
-            coverage_pct=hit["coverage_pct"],
-            record=record,
-        )
     return None
 
 

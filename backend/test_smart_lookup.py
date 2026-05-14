@@ -73,8 +73,8 @@ class LookupTests(unittest.TestCase):
         req = _make_req()
         with patch.object(
             sl,
-            "_diamond_top_hit",
-            return_value={"uniprot_id": "P43506", "identity_pct": 87.0, "coverage_pct": 99.0},
+            "_diamond_hits",
+            return_value=[{"uniprot_id": "P43506", "identity_pct": 87.0, "coverage_pct": 99.0}],
         ):
             hit = sl.lookup(req, registry=self.registry)
         self.assertIsNotNone(hit)
@@ -87,9 +87,9 @@ class LookupTests(unittest.TestCase):
         req = _make_req()
         with patch.object(
             sl,
-            "_diamond_top_hit",
+            "_diamond_hits",
             # 49% identity < 50% threshold
-            return_value={"uniprot_id": "P43506", "identity_pct": 49.0, "coverage_pct": 99.0},
+            return_value=[{"uniprot_id": "P43506", "identity_pct": 49.0, "coverage_pct": 99.0}],
         ):
             hit = sl.lookup(req, registry=self.registry)
         self.assertIsNone(hit)
@@ -98,16 +98,16 @@ class LookupTests(unittest.TestCase):
         req = _make_req()
         with patch.object(
             sl,
-            "_diamond_top_hit",
+            "_diamond_hits",
             # 90% coverage < 95% threshold
-            return_value={"uniprot_id": "P43506", "identity_pct": 87.0, "coverage_pct": 90.0},
+            return_value=[{"uniprot_id": "P43506", "identity_pct": 87.0, "coverage_pct": 90.0}],
         ):
             hit = sl.lookup(req, registry=self.registry)
         self.assertIsNone(hit)
 
     def test_no_diamond_hit_returns_none(self) -> None:
         req = _make_req()
-        with patch.object(sl, "_diamond_top_hit", return_value=None):
+        with patch.object(sl, "_diamond_hits", return_value=[]):
             hit = sl.lookup(req, registry=self.registry)
         self.assertIsNone(hit)
 
@@ -115,8 +115,8 @@ class LookupTests(unittest.TestCase):
         req = _make_req(force=True)
         with patch.object(
             sl,
-            "_diamond_top_hit",
-            return_value={"uniprot_id": "P43506", "identity_pct": 87.0, "coverage_pct": 99.0},
+            "_diamond_hits",
+            return_value=[{"uniprot_id": "P43506", "identity_pct": 87.0, "coverage_pct": 99.0}],
         ) as mock_hit:
             hit = sl.lookup(req, registry=self.registry)
         self.assertIsNone(hit)
@@ -128,7 +128,7 @@ class LookupTests(unittest.TestCase):
         (self.fam_dir / "representatives.dmnd").unlink()
         registry = FamilyRegistry(self.root)
         req = _make_req()
-        with patch.object(sl, "_diamond_top_hit") as mock_hit:
+        with patch.object(sl, "_diamond_hits") as mock_hit:
             hit = sl.lookup(req, registry=registry)
         self.assertIsNone(hit)
         mock_hit.assert_not_called()
@@ -137,9 +137,9 @@ class LookupTests(unittest.TestCase):
         req = _make_req()
         with patch.object(
             sl,
-            "_diamond_top_hit",
+            "_diamond_hits",
             # Diamond claims a great match for an ID that *isn't* in our JSONL.
-            return_value={"uniprot_id": "ORPHAN", "identity_pct": 99.0, "coverage_pct": 99.0},
+            return_value=[{"uniprot_id": "ORPHAN", "identity_pct": 99.0, "coverage_pct": 99.0}],
         ):
             hit = sl.lookup(req, registry=self.registry)
         self.assertIsNone(hit)
@@ -148,14 +148,34 @@ class LookupTests(unittest.TestCase):
         req = _make_req(input_method="Protein sequence", input_value="MNNNN")
         with patch.object(
             sl,
-            "_diamond_top_hit",
-            return_value={"uniprot_id": "P43506", "identity_pct": 99.0, "coverage_pct": 99.0},
+            "_diamond_hits",
+            return_value=[{"uniprot_id": "P43506", "identity_pct": 99.0, "coverage_pct": 99.0}],
         ) as mock_hit:
             sl.lookup(req, registry=self.registry)
         # The query passed to diamond should be the raw input sequence —
         # no UniProt/RefSeq fetch when input_method is "Protein sequence".
         called_seq = mock_hit.call_args.args[0]
         self.assertEqual(called_seq, "MNNNN")
+
+    def test_first_hit_below_coverage_second_above_returns_second(self) -> None:
+        # Regression for the "max-target-seqs 1" bug: diamond's top hit by
+        # bit score can be a partial-coverage match that fails the coverage
+        # threshold, while a lower-bit-score hit clears both thresholds and
+        # is the right cluster to use.
+        req = _make_req()
+        with patch.object(
+            sl,
+            "_diamond_hits",
+            return_value=[
+                # Top by score: 99% ID but 85% coverage — fails 95% coverage gate.
+                {"uniprot_id": "OTHER", "identity_pct": 99.0, "coverage_pct": 85.0},
+                # Lower-ranked but clears both thresholds — should win.
+                {"uniprot_id": "P43506", "identity_pct": 66.0, "coverage_pct": 97.0},
+            ],
+        ):
+            hit = sl.lookup(req, registry=self.registry)
+        self.assertIsNotNone(hit)
+        self.assertEqual(hit.uniprot_id, "P43506")
 
     def test_multiple_families_first_above_threshold_wins(self) -> None:
         # Add a second family alphabetically before tetr, with a hit.
@@ -170,10 +190,10 @@ class LookupTests(unittest.TestCase):
         # Both family lookups would hit; we expect the first registered family.
         with patch.object(
             sl,
-            "_diamond_top_hit",
+            "_diamond_hits",
             side_effect=[
-                {"uniprot_id": "X11111", "identity_pct": 99.0, "coverage_pct": 99.0},
-                {"uniprot_id": "P43506", "identity_pct": 99.0, "coverage_pct": 99.0},
+                [{"uniprot_id": "X11111", "identity_pct": 99.0, "coverage_pct": 99.0}],
+                [{"uniprot_id": "P43506", "identity_pct": 99.0, "coverage_pct": 99.0}],
             ],
         ):
             hit = sl.lookup(req, registry=registry)
