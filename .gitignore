@@ -19,6 +19,9 @@ families/*/cluster_homologs.json
 families/*/clusters.tsv
 families/*/members.fasta
 families/*/members.txt
+families/*/members_predictions.jsonl
+families/*/members_with_promoters.dmnd
+families/*/members_with_promoters.fasta
 families/_resources/
 
 # Frontend build artifacts

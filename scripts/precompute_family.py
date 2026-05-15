@@ -49,6 +49,8 @@ from scripts.precompute import (  # noqa: E402
     dmnd as dmnd_mod,
     groovdb as groovdb_mod,
     interpro as interpro_mod,
+    members_dmnd as members_dmnd_mod,
+    members_predict as members_predict_mod,
     paperblast as paperblast_mod,
     predict as predict_mod,
     representatives as representatives_mod,
@@ -63,6 +65,8 @@ ALL_STAGES = (
     "dmnd",
     "cluster_search",
     "predict",
+    "members_predict",
+    "members_dmnd",
 )
 
 
@@ -167,6 +171,51 @@ def stage_cluster_search(_manifest: dict, fam_dir: Path, force: bool, max_cluste
     )
 
 
+def stage_members_predict(
+    _manifest: dict,
+    fam_dir: Path,
+    max_members: int | None,
+    workers: int,
+    batch_size: int,
+) -> None:
+    out_path = fam_dir / "members_predictions.jsonl"
+    cluster_predictions = fam_dir / "predictions.jsonl"
+
+    # 1. Lift everything we can from the existing per-cluster predictions.jsonl
+    if cluster_predictions.exists():
+        n_lifted = members_predict_mod.lift_from_clusters(cluster_predictions, out_path)
+        logging.info("lifted %d records from %s", n_lifted, cluster_predictions.name)
+    else:
+        logging.warning("no %s found; nothing to lift", cluster_predictions)
+
+    # 2. Process the gap (members in members.fasta but not yet in the JSONL)
+    member_ids = list(members_predict_mod.iter_member_ids(fam_dir / "members.fasta"))
+    logging.info("members in fasta: %d", len(member_ids))
+
+    def progress(i: int, total: int, _elapsed: int) -> None:
+        if (i + 1) % 50 == 0 or i + 1 == total:
+            logging.info("[members_predict batch %d/%d]", i + 1, total)
+
+    members_predict_mod.predict_members(
+        member_ids=member_ids,
+        output_path=out_path,
+        batch_size=batch_size,
+        workers=workers,
+        max_entries=max_members,
+        on_progress=progress,
+    )
+
+
+def stage_members_dmnd(_manifest: dict, fam_dir: Path, force: bool) -> None:
+    members_dmnd_mod.build_members_dmnd(
+        members_fasta=fam_dir / "members.fasta",
+        predictions_path=fam_dir / "members_predictions.jsonl",
+        output_fasta=fam_dir / "members_with_promoters.fasta",
+        output_dmnd=fam_dir / "members_with_promoters.dmnd",
+        force=force,
+    )
+
+
 def stage_predict(_manifest: dict, fam_dir: Path, max_clusters: int | None, workers: int) -> None:
     representatives = representatives_mod.read_representatives(fam_dir / "representatives.json")
     sequences = _read_sequences(fam_dir / "members.fasta")
@@ -239,7 +288,18 @@ def main() -> None:
         "--workers",
         type=int,
         default=1,
-        help="Parallel workers for the predict stage (default: 1, sequential)",
+        help="Parallel workers for predict / members_predict (default: 1, sequential)",
+    )
+    parser.add_argument(
+        "--max-members",
+        type=int,
+        help="Limit members_predict to N gap members (smoke test)",
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=50,
+        help="Members per batch in members_predict (one NCBI IPG call per batch)",
     )
     parser.add_argument("-v", "--verbose", action="store_true", help="DEBUG-level logging")
     args = parser.parse_args()
@@ -270,6 +330,10 @@ def main() -> None:
             stage_cluster_search(manifest, fam_dir, args.force, args.max_clusters)
         elif name == "predict":
             stage_predict(manifest, fam_dir, args.max_clusters, args.workers)
+        elif name == "members_predict":
+            stage_members_predict(manifest, fam_dir, args.max_members, args.workers, args.batch_size)
+        elif name == "members_dmnd":
+            stage_members_dmnd(manifest, fam_dir, args.force)
 
 
 if __name__ == "__main__":
