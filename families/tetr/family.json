@@ -12,6 +12,6 @@
   "smart_lookup": {
     "min_identity_pct": 40,
     "min_coverage_pct": 90,
-    "max_homologs": 30
+    "max_homologs": 100
   }
 }
