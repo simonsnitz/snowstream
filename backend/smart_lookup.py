@@ -168,18 +168,15 @@ def _synthesize_record(
     top_id = qualifying_hits[0]["uniprot_id"]
     homologs: list[dict] = []
     for hit, rec in zip(qualifying_hits, member_records):
-        operon = rec.get("operon")
-        # genome accession lives inside the operon dict; surface it at
-        # the homolog level for downstream display convenience.
-        genome = operon.get("genome") if isinstance(operon, dict) else None
         homologs.append(
             {
                 "uniprot_id": hit["uniprot_id"],
                 "identity": hit["identity_pct"],
                 "coverage": hit["coverage_pct"],
-                "genome": genome,
-                "operon": operon,
+                "genome": rec.get("genome"),
                 "promoter": rec.get("promoter"),
+                "protein_index": rec.get("protein_index"),
+                "operon": rec.get("operon"),
             }
         )
     return {

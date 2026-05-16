@@ -47,14 +47,15 @@ PER_BATCH_TIMEOUT_SEC = float(os.environ.get("SNOWPRINT_PER_BATCH_TIMEOUT", "600
 # Per-member record carries enough to (a) rebuild a homolog dict for the
 # operator finder, and (b) drive the Diamond DB index. Identity/coverage
 # are intentionally omitted — they'll be filled in at query-time relative
-# to the user's actual query, not relative to some cluster rep. genome /
-# start / stop / strand are also omitted: the regulator's coords live
-# inside operon.operon[protein_index] and the genome accession is on
-# operon.genome — top-level copies would just duplicate that data.
+# to the user's actual query, not relative to some cluster rep.
+#
+# Shape: top-level `genome`, `protein_index`, plus `operon` as a flat
+# list of genes (not the nested dict acc2operon emits). The regulator's
+# own coords live at `operon[protein_index]` — no separate top-level
+# start/stop/strand needed.
 def _empty_record(uid: str, source: str) -> dict:
     return {
         "uniprot_id": uid,
-        "operon": None,
         "promoter": None,
         "source": source,
         "computed_at": datetime.now(timezone.utc).isoformat(),
@@ -62,13 +63,33 @@ def _empty_record(uid: str, source: str) -> dict:
 
 
 def _record_from_homolog(h: dict, source: str, computed_at: str | None) -> dict:
-    return {
+    # `h["operon"]` may be either the nested dict from acc2operon
+    # (`{operon: [...], protein_index, genome}`) or already the flat
+    # form (e.g. when lifted from an already-migrated record). Handle
+    # both — the flat form's `operon` key points directly at the list.
+    op = h.get("operon")
+    if isinstance(op, dict):
+        op_list = op.get("operon")
+        protein_index = op.get("protein_index")
+        genome = op.get("genome")
+    elif isinstance(op, list):
+        op_list = op
+        protein_index = h.get("protein_index")
+        genome = h.get("genome")
+    else:
+        op_list = None
+        protein_index = None
+        genome = h.get("genome")
+    rec = {
         "uniprot_id": h["uniprot_id"],
-        "operon": h.get("operon"),
+        "genome": genome,
         "promoter": h.get("promoter"),
         "source": source,
         "computed_at": computed_at or datetime.now(timezone.utc).isoformat(),
+        "protein_index": protein_index,
+        "operon": op_list,
     }
+    return rec
 
 
 def _existing_ids(jsonl_path: Path) -> set[str]:
