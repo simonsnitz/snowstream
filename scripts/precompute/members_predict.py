@@ -47,14 +47,13 @@ PER_BATCH_TIMEOUT_SEC = float(os.environ.get("SNOWPRINT_PER_BATCH_TIMEOUT", "600
 # Per-member record carries enough to (a) rebuild a homolog dict for the
 # operator finder, and (b) drive the Diamond DB index. Identity/coverage
 # are intentionally omitted — they'll be filled in at query-time relative
-# to the user's actual query, not relative to some cluster rep.
+# to the user's actual query, not relative to some cluster rep. genome /
+# start / stop / strand are also omitted: the regulator's coords live
+# inside operon.operon[protein_index] and the genome accession is on
+# operon.genome — top-level copies would just duplicate that data.
 def _empty_record(uid: str, source: str) -> dict:
     return {
         "uniprot_id": uid,
-        "genome": None,
-        "start": None,
-        "stop": None,
-        "strand": None,
         "operon": None,
         "promoter": None,
         "source": source,
@@ -65,10 +64,6 @@ def _empty_record(uid: str, source: str) -> dict:
 def _record_from_homolog(h: dict, source: str, computed_at: str | None) -> dict:
     return {
         "uniprot_id": h["uniprot_id"],
-        "genome": h.get("genome"),
-        "start": h.get("start"),
-        "stop": h.get("stop"),
-        "strand": h.get("strand"),
         "operon": h.get("operon"),
         "promoter": h.get("promoter"),
         "source": source,
