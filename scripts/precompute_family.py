@@ -53,6 +53,7 @@ from scripts.precompute import (  # noqa: E402
     members_predict as members_predict_mod,
     members_tsv_backfill as members_tsv_backfill_mod,
     paperblast as paperblast_mod,
+    xref_index as xref_index_mod,
     predict as predict_mod,
     representatives as representatives_mod,
     sequences as sequences_mod,
@@ -69,6 +70,7 @@ ALL_STAGES = (
     "members_predict",
     "members_tsv_backfill",
     "members_dmnd",
+    "xref_index",
 )
 
 
@@ -229,6 +231,14 @@ def stage_members_tsv_backfill(
     )
 
 
+def stage_xref_index(_manifest: dict, fam_dir: Path, tsv_path: Path, force: bool) -> None:
+    xref_index_mod.build_refseq_to_uniprot(
+        tsv_path=tsv_path,
+        output_path=fam_dir / "refseq_to_uniprot.json",
+        force=force,
+    )
+
+
 def stage_members_dmnd(_manifest: dict, fam_dir: Path, force: bool) -> None:
     members_dmnd_mod.build_members_dmnd(
         members_fasta=fam_dir / "members.fasta",
@@ -368,6 +378,10 @@ def main() -> None:
             )
         elif name == "members_dmnd":
             stage_members_dmnd(manifest, fam_dir, args.force)
+        elif name == "xref_index":
+            if args.tsv_path is None:
+                raise SystemExit("--tsv-path is required for xref_index")
+            stage_xref_index(manifest, fam_dir, args.tsv_path, args.force)
 
 
 if __name__ == "__main__":

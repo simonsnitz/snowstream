@@ -45,13 +45,18 @@ class SmartLookupHit:
     record: dict  # the JSONL line for the matched representative
 
 
-def _resolve_query_sequence(req: PredictRequest) -> Optional[str]:
-    """Return the protein sequence implied by `req`, or None on lookup failure."""
-    if req.input_method == "RefSeq":
-        return accID2sequence(req.input_value)
-    if req.input_method == "Uniprot":
-        return uniprotID2sequence(req.input_value)
-    return req.input_value
+def _resolve_query_sequence(req: PredictRequest, registry: FamilyRegistry) -> Optional[str]:
+    """Return the protein sequence implied by `req`. Tries each family's local
+    sequence index first (FASTA byte-offset for UniProt input, RefSeq → UniProt
+    cross-ref then FASTA for RefSeq input); falls back to NCBI/UniProt fetch
+    only when the ID isn't in any family's precomputed members."""
+    from . import sequence_index  # local import to avoid src.* import cycle
+    return sequence_index.resolve_query_sequence(
+        req,
+        registry,
+        fallback_refseq=accID2sequence,
+        fallback_uniprot=uniprotID2sequence,
+    )
 
 
 def _normalise_uniprot_id(raw: str) -> str:
@@ -214,7 +219,7 @@ def lookup(
     if req.force:
         return None
 
-    seq = _resolve_query_sequence(req)
+    seq = _resolve_query_sequence(req, registry)
     if not seq:
         return None
 

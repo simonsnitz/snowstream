@@ -22,6 +22,7 @@ families/*/members.txt
 families/*/members_predictions.jsonl
 families/*/members_with_promoters.dmnd
 families/*/members_with_promoters.fasta
+families/*/refseq_to_uniprot.json
 families/_resources/
 
 # Frontend build artifacts
