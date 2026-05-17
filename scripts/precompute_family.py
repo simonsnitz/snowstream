@@ -51,6 +51,7 @@ from scripts.precompute import (  # noqa: E402
     interpro as interpro_mod,
     members_dmnd as members_dmnd_mod,
     members_predict as members_predict_mod,
+    members_tsv_backfill as members_tsv_backfill_mod,
     paperblast as paperblast_mod,
     predict as predict_mod,
     representatives as representatives_mod,
@@ -66,6 +67,7 @@ ALL_STAGES = (
     "cluster_search",
     "predict",
     "members_predict",
+    "members_tsv_backfill",
     "members_dmnd",
 )
 
@@ -206,6 +208,27 @@ def stage_members_predict(
     )
 
 
+def stage_members_tsv_backfill(
+    _manifest: dict,
+    fam_dir: Path,
+    tsv_path: Path,
+    workers: int,
+    batch_size: int,
+    max_empties: int | None,
+) -> None:
+    def progress(i: int, total: int) -> None:
+        logging.info("[tsv_backfill batch %d/%d]", i, total)
+
+    members_tsv_backfill_mod.backfill_via_tsv(
+        jsonl_path=fam_dir / "members_predictions.jsonl",
+        tsv_path=tsv_path,
+        workers=workers,
+        batch_size=batch_size,
+        max_empties=max_empties,
+        on_progress=progress,
+    )
+
+
 def stage_members_dmnd(_manifest: dict, fam_dir: Path, force: bool) -> None:
     members_dmnd_mod.build_members_dmnd(
         members_fasta=fam_dir / "members.fasta",
@@ -301,6 +324,11 @@ def main() -> None:
         default=50,
         help="Members per batch in members_predict (one NCBI IPG call per batch)",
     )
+    parser.add_argument(
+        "--tsv-path",
+        type=Path,
+        help="InterPro UniProt TSV (Entry/RefSeq/EMBL[/Sequence]) for members_tsv_backfill",
+    )
     parser.add_argument("-v", "--verbose", action="store_true", help="DEBUG-level logging")
     args = parser.parse_args()
 
@@ -332,6 +360,12 @@ def main() -> None:
             stage_predict(manifest, fam_dir, args.max_clusters, args.workers)
         elif name == "members_predict":
             stage_members_predict(manifest, fam_dir, args.max_members, args.workers, args.batch_size)
+        elif name == "members_tsv_backfill":
+            if args.tsv_path is None:
+                raise SystemExit("--tsv-path is required for members_tsv_backfill")
+            stage_members_tsv_backfill(
+                manifest, fam_dir, args.tsv_path, args.workers, args.batch_size, args.max_members
+            )
         elif name == "members_dmnd":
             stage_members_dmnd(manifest, fam_dir, args.force)
 
