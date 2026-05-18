@@ -14,18 +14,7 @@ def fetch_promoter(homolog_dict, params):
     genome_id = homolog_dict["genome"]
 
 
-    # Set promoter start and stop coordinates.
-    # Walk outward from the regulator looking for an operon boundary, signalled
-    # by either:
-    #   regType 1 — an opposite-direction neighbour (likely the end of an
-    #               adjacent transcription unit)
-    #   regType 2 — a same-direction neighbour with a large enough intergenic
-    #               gap to the gene immediately closer to the regulator
-    # `index` tracks the leftmost (for +) or rightmost (for -) gene we still
-    # consider part of *our* operon. The gap test must use the CURRENT
-    # iteration's neighbours, not the regulator's — previously the regType 2
-    # arm always re-evaluated the same regulator-vs-immediate-neighbour gap
-    # so the loop never made progress past the first iteration.
+    # Set promoter start and stop coordinates
     if operon[regIndex]["direction"] == "+":
         queryGenes = list(reversed(operon[0:regIndex]))
         index = regIndex
@@ -39,13 +28,11 @@ def fetch_promoter(homolog_dict, params):
                 regType = 1
                 break
             else:
-                # Gap between this iteration's upstream gene (operon[index-1])
-                # and the closer-to-regulator gene (operon[index]).
-                start = int(operon[index-1]["stop"])
-                stop = int(operon[index]["start"])
-                testLength = stop - start
+                start = operon[regIndex-1]["stop"]
+                stop = operon[regIndex]["start"]
+                testLength = int(stop) - int(start)
 
-                # Set minimum promoter length.
+                # Set minimum promoter length. 
                 if testLength > params["min_length"]:
                     startPos = start
                     stopPos = stop
@@ -70,23 +57,19 @@ def fetch_promoter(homolog_dict, params):
                 regType = 1
                 break
             else:
-                # Counterintuitive use of "stop"/"start": gene coords are
-                # always start < stop on the forward strand, regardless of
-                # the gene's transcriptional direction. We pick the
-                # forward-strand intergenic region between this iteration's
-                # outer gene (operon[index+1]) and the closer-to-regulator
-                # gene (operon[index]).
-                start = int(operon[index]["stop"])
-                stop = int(operon[index+1]["start"])
-                testLength = stop - start
-                if testLength > params["min_length"]:
+                    # Counterintunitive use of "stop"/"start" ...
+                    # Start < stop always true, regardless of direction
+                start = operon[regIndex]["stop"]
+                stop = operon[regIndex+1]["start"]
+                testLength = int(stop) - int(start)
+                if testLength > 100:
                     startPos = start
                     stopPos = stop
                     regType = 2
                     break
                 else:
                     if index == len(operon)-2:
-                        # Reached end of operon. This entry will be omitted.
+                        # Reached end of operon. This entry will be omitted'
                         return None
                     else:
                         index += 1
