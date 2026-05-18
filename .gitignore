@@ -11,7 +11,7 @@ cache/
 # Family precompute outputs (JSONL caches, Diamond DBs, fasta files)
 # Keep family.json manifests tracked; ignore the bulk data files.
 families/*/predictions.jsonl
-families/*/predictions.jsonl.*.bak
+families/*/*.bak
 families/*/representatives.dmnd
 families/*/representatives.fasta
 families/*/representatives.json
@@ -19,6 +19,10 @@ families/*/cluster_homologs.json
 families/*/clusters.tsv
 families/*/members.fasta
 families/*/members.txt
+families/*/members_predictions.jsonl
+families/*/members_with_promoters.dmnd
+families/*/members_with_promoters.fasta
+families/*/refseq_to_uniprot.json
 families/_resources/
 
 # Frontend build artifacts

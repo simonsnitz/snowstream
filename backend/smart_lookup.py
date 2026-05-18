@@ -45,13 +45,31 @@ class SmartLookupHit:
     record: dict  # the JSONL line for the matched representative
 
 
-def _resolve_query_sequence(req: PredictRequest) -> Optional[str]:
-    """Return the protein sequence implied by `req`, or None on lookup failure."""
-    if req.input_method == "RefSeq":
-        return accID2sequence(req.input_value)
-    if req.input_method == "Uniprot":
-        return uniprotID2sequence(req.input_value)
-    return req.input_value
+def _resolve_query_sequence(req: PredictRequest, registry: FamilyRegistry) -> Optional[str]:
+    """Return the protein sequence implied by `req`. Tries each family's local
+    sequence index first (FASTA byte-offset for UniProt input, RefSeq → UniProt
+    cross-ref then FASTA for RefSeq input); falls back to NCBI/UniProt fetch
+    only when the ID isn't in any family's precomputed members."""
+    from . import sequence_index  # local import to avoid src.* import cycle
+    return sequence_index.resolve_query_sequence(
+        req,
+        registry,
+        fallback_refseq=accID2sequence,
+        fallback_uniprot=uniprotID2sequence,
+    )
+
+
+def _normalise_uniprot_id(raw: str) -> str:
+    """Strip a UniProt 'sp|P12345|NAME' / 'tr|P12345|NAME' style header to its
+    bare accession. Diamond reports sseqid as whatever appears after `>` in
+    the database's FASTA — for UniProt-sourced DBs that's the full pipe-
+    delimited form, which doesn't match the bare accessions used as keys in
+    our JSONL records."""
+    if "|" in raw:
+        parts = raw.split("|")
+        if len(parts) >= 2 and parts[0] in ("sp", "tr"):
+            return parts[1]
+    return raw
 
 
 def _diamond_hits(
@@ -111,7 +129,7 @@ def _diamond_hits(
             try:
                 hits.append(
                     {
-                        "uniprot_id": parts[0],
+                        "uniprot_id": _normalise_uniprot_id(parts[0]),
                         "identity_pct": float(parts[1]),
                         "coverage_pct": float(parts[2]),
                     }
@@ -135,6 +153,49 @@ def _meets_thresholds(hit: dict, family: Family) -> bool:
     return hit["identity_pct"] >= min_identity and hit["coverage_pct"] >= min_coverage
 
 
+def _synthesize_record(
+    family_key: str,
+    qualifying_hits: list[dict],
+    member_records: list[dict],
+) -> dict:
+    """Build a result record from the per-member predictions of the qualifying
+    diamond hits. Shape matches the per-rep `predictions.jsonl` records that
+    the existing frontend already knows how to render:
+
+        {uniprot_id, centroid_uniprot_id, cluster, evidence, computed_at,
+         input, protein_info, homologs: [{uniprot_id, identity, coverage,
+                                          genome, start, stop, strand,
+                                          operon, promoter}, ...]}
+
+    `homologs` come from member_records (operon + promoter), enriched with
+    the per-query identity/coverage from the diamond hits.
+    """
+    top_id = qualifying_hits[0]["uniprot_id"]
+    homologs: list[dict] = []
+    for hit, rec in zip(qualifying_hits, member_records):
+        homologs.append(
+            {
+                "uniprot_id": hit["uniprot_id"],
+                "identity": hit["identity_pct"],
+                "coverage": hit["coverage_pct"],
+                "genome": rec.get("genome"),
+                "promoter": rec.get("promoter"),
+                "protein_index": rec.get("protein_index"),
+                "operon": rec.get("operon"),
+            }
+        )
+    return {
+        "uniprot_id": top_id,
+        "centroid_uniprot_id": top_id,
+        "cluster": None,
+        "evidence": {"source": "members_db"},
+        "computed_at": None,
+        "input": None,
+        "protein_info": None,
+        "homologs": homologs,
+    }
+
+
 def lookup(
     req: PredictRequest,
     registry: FamilyRegistry = default_registry,
@@ -144,53 +205,75 @@ def lookup(
     Returns None when:
       * `req.force` is true (caller asked for a fresh run),
       * the input sequence can't be resolved,
-      * no family's `representatives.dmnd` exists yet,
-      * no diamond hit clears that family's thresholds,
-      * the matched UniProt ID isn't in the family's predictions.jsonl.
+      * no family's `members_with_promoters.dmnd` exists yet,
+      * no diamond hit clears that family's thresholds AND has a record in
+        `members_predictions.jsonl`.
 
-    We pull the top N diamond hits (not just the top-1) because diamond
-    ranks by bit score: a partial 99% match can outrank a full-coverage 70%
-    match. We need the first hit that clears BOTH identity AND coverage
-    thresholds, which isn't always the top one.
+    The smart-lookup index is now per-member (built from
+    `members_predictions.jsonl`), not per-cluster-rep. We collect every
+    diamond hit clearing the family's thresholds, pull each one's cached
+    operon+promoter, and synthesize a result record whose `homologs` list
+    feeds the operator finder directly. The top hit (by diamond bit score)
+    becomes the `matched_via` anchor for the UI banner.
     """
     if req.force:
         return None
 
-    seq = _resolve_query_sequence(req)
+    seq = _resolve_query_sequence(req, registry)
     if not seq:
         return None
 
     for family in registry.list():
-        if not family.representatives_dmnd.exists():
+        if not family.members_with_promoters_dmnd.exists():
             continue
+
+        max_homologs = int(family.smart_lookup.get("max_homologs", 30)) if family.smart_lookup else 30
 
         # diamond runs from the project root by convention (matches the rest
         # of the pipeline so its database paths resolve consistently).
         prev_cwd = os.getcwd()
         os.chdir(PROJECT_ROOT)
         try:
-            hits = _diamond_hits(seq, family.representatives_dmnd)
+            hits = _diamond_hits(
+                seq,
+                family.members_with_promoters_dmnd,
+                max_target_seqs=max(max_homologs * 3, 50),
+            )
         finally:
             os.chdir(prev_cwd)
 
+        # Collect every hit that clears the family's thresholds AND has a
+        # cached record. Stop once we have max_homologs of them.
+        qualifying: list[dict] = []
+        records: list[dict] = []
         for hit in hits:
             if not _meets_thresholds(hit, family):
                 continue
-            record = registry.lookup(family.key, hit["uniprot_id"])
-            if record is None:
+            rec = registry.lookup_member(family.key, hit["uniprot_id"])
+            if rec is None:
                 log.warning(
-                    "smart-lookup hit %s in family %s but no record in predictions.jsonl",
+                    "smart-lookup hit %s in family %s but no record in members_predictions.jsonl",
                     hit["uniprot_id"],
                     family.key,
                 )
                 continue
-            return SmartLookupHit(
-                family_key=family.key,
-                uniprot_id=hit["uniprot_id"],
-                identity_pct=hit["identity_pct"],
-                coverage_pct=hit["coverage_pct"],
-                record=record,
-            )
+            qualifying.append(hit)
+            records.append(rec)
+            if len(qualifying) >= max_homologs:
+                break
+
+        if not qualifying:
+            continue
+
+        anchor = qualifying[0]
+        record = _synthesize_record(family.key, qualifying, records)
+        return SmartLookupHit(
+            family_key=family.key,
+            uniprot_id=anchor["uniprot_id"],
+            identity_pct=anchor["identity_pct"],
+            coverage_pct=anchor["coverage_pct"],
+            record=record,
+        )
     return None
 
 

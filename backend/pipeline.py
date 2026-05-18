@@ -90,17 +90,26 @@ def _uniprot_protein_info(uniprot_id: str) -> dict | None:
 
 
 def _normalize_homolog(h: dict) -> dict:
-    """Convert internal homolog dict (mixed casing) to API-friendly snake_case."""
+    """Convert internal homolog dict (mixed casing) to API-friendly snake_case.
+
+    The internal `operon` is a nested dict produced by acc2operon —
+    `{operon: [genes...], protein_index: int, genome: str}`. We unpack it
+    here so the public API exposes a flat shape: `genome` and
+    `protein_index` at the top level, and `operon` as just the gene list.
+    `promoter` lives between them; the gene list is last for readability.
+    """
+    op = h.get("operon") if isinstance(h.get("operon"), dict) else None
+    op_list = op.get("operon") if op else None
+    protein_index = op.get("protein_index") if op else None
+    genome = (op.get("genome") if op else None) or h.get("Genome") or h.get("genome")
     return {
         "uniprot_id": h.get("Uniprot Id"),
         "identity": h.get("identity"),
         "coverage": h.get("coverage"),
-        "genome": h.get("Genome") or h.get("genome"),
-        "start": h.get("start"),
-        "stop": h.get("stop"),
-        "strand": h.get("strand"),
-        "operon": h.get("operon"),
+        "genome": genome,
         "promoter": h.get("promoter"),
+        "protein_index": protein_index,
+        "operon": op_list,
     }
 
 
