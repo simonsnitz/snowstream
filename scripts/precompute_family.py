@@ -53,6 +53,7 @@ from scripts.precompute import (  # noqa: E402
     members_predict as members_predict_mod,
     members_tsv_backfill as members_tsv_backfill_mod,
     paperblast as paperblast_mod,
+    promoter_retry as promoter_retry_mod,
     xref_index as xref_index_mod,
     predict as predict_mod,
     representatives as representatives_mod,
@@ -69,6 +70,7 @@ ALL_STAGES = (
     "predict",
     "members_predict",
     "members_tsv_backfill",
+    "promoter_retry",
     "members_dmnd",
     "xref_index",
 )
@@ -231,6 +233,23 @@ def stage_members_tsv_backfill(
     )
 
 
+def stage_promoter_retry(
+    _manifest: dict,
+    fam_dir: Path,
+    workers: int,
+    max_records: int | None,
+) -> None:
+    def progress(done: int, total: int, recovered: int) -> None:
+        logging.info("[promoter_retry %d/%d, recovered %d]", done, total, recovered)
+
+    promoter_retry_mod.retry_promoters(
+        jsonl_path=fam_dir / "members_predictions.jsonl",
+        workers=workers,
+        max_records=max_records,
+        on_progress=progress,
+    )
+
+
 def stage_xref_index(_manifest: dict, fam_dir: Path, tsv_path: Path, force: bool) -> None:
     xref_index_mod.build_refseq_to_uniprot(
         tsv_path=tsv_path,
@@ -376,6 +395,8 @@ def main() -> None:
             stage_members_tsv_backfill(
                 manifest, fam_dir, args.tsv_path, args.workers, args.batch_size, args.max_members
             )
+        elif name == "promoter_retry":
+            stage_promoter_retry(manifest, fam_dir, args.workers, args.max_members)
         elif name == "members_dmnd":
             stage_members_dmnd(manifest, fam_dir, args.force)
         elif name == "xref_index":
