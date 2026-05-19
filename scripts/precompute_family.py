@@ -52,6 +52,7 @@ from scripts.precompute import (  # noqa: E402
     members_dmnd as members_dmnd_mod,
     members_predict as members_predict_mod,
     members_tsv_backfill as members_tsv_backfill_mod,
+    operon_retry as operon_retry_mod,
     paperblast as paperblast_mod,
     promoter_retry as promoter_retry_mod,
     xref_index as xref_index_mod,
@@ -70,9 +71,10 @@ ALL_STAGES = (
     "predict",
     "members_predict",
     "members_tsv_backfill",
+    "xref_index",
+    "operon_retry",
     "promoter_retry",
     "members_dmnd",
-    "xref_index",
 )
 
 
@@ -229,6 +231,24 @@ def stage_members_tsv_backfill(
         workers=workers,
         batch_size=batch_size,
         max_empties=max_empties,
+        on_progress=progress,
+    )
+
+
+def stage_operon_retry(
+    _manifest: dict,
+    fam_dir: Path,
+    workers: int,
+    max_records: int | None,
+) -> None:
+    def progress(done: int, total: int, recovered: int) -> None:
+        logging.info("[operon_retry %d/%d, recovered %d]", done, total, recovered)
+
+    operon_retry_mod.retry_operons(
+        jsonl_path=fam_dir / "members_predictions.jsonl",
+        refseq_map_path=fam_dir / "refseq_to_uniprot.json",
+        workers=workers,
+        max_records=max_records,
         on_progress=progress,
     )
 
@@ -395,6 +415,8 @@ def main() -> None:
             stage_members_tsv_backfill(
                 manifest, fam_dir, args.tsv_path, args.workers, args.batch_size, args.max_members
             )
+        elif name == "operon_retry":
+            stage_operon_retry(manifest, fam_dir, args.workers, args.max_members)
         elif name == "promoter_retry":
             stage_promoter_retry(manifest, fam_dir, args.workers, args.max_members)
         elif name == "members_dmnd":

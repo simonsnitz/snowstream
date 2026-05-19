@@ -34,3 +34,6 @@ blast.json
 genome_coordinates.json
 operators.json
 src/test_msa/
+
+# Precompute stage logs
+logs/
