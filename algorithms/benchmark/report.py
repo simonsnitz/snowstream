@@ -2,10 +2,14 @@
 
 Reads `per_protein.json`, `summary.json`, `run_info.json` from a results
 directory and writes:
-  * `report.md` — comparison tables for every metric across every version
+  * `report.md` — detailed comparison tables + chart references (lives in
+    the gitignored results/ dir alongside the PNGs)
   * `chart_<metric>.png` — distribution plots:
       - identity metrics: cumulative count above each threshold, per version
       - count metrics: histogram of values per version
+  * `algorithms/benchmark/LATEST.md` — committed, text-only summary that
+    overwrites on every run so the most recent result is always visible
+    in VSCode/GitHub without spelunking into gitignored dirs
 
 Usage:
   python -m algorithms.benchmark.report path/to/results/dir
@@ -209,17 +213,160 @@ def _emit_charts(summary: dict, out_dir: Path) -> None:
             plt.close(fig)
 
 
+def _emit_latest_markdown(summary: dict, run_info: dict,
+                           per_protein: list[dict]) -> str:
+    """Compact, text-only summary suitable for committing as LATEST.md.
+
+    Same threshold-count tables as the full report (these are already small),
+    drops the "## Charts" section, and shows the top 10 wins + top 10 losses
+    from the head-to-head instead of the full sorted list. Designed to stay
+    under ~5 KB regardless of dataset size.
+    """
+    lines: list[str] = []
+    versions = list(summary["versions"].keys())
+    n_total = run_info["dataset_size"]
+    n_resolved = sum(1 for r in per_protein if r.get("homologs_fetched"))
+
+    dataset_name = Path(run_info["dataset_path"]).name
+    lines.append("# Latest benchmark result")
+    lines.append("")
+    lines.append("> Auto-generated on every `algorithms.benchmark.run`. "
+                 "For per-run history (with PNG charts) see "
+                 "`algorithms/benchmark/results/<timestamp>/`.")
+    lines.append("")
+    lines.append(f"- **Run**: `{run_info['timestamp']}`")
+    lines.append(f"- **Dataset**: `{dataset_name}`  "
+                 f"(N = {n_total}; {n_resolved} resolved)")
+    lines.append(f"- **Versions**: " + ", ".join(f"`{v}`" for v in versions))
+    if run_info.get("max_proteins"):
+        lines.append(f"- **Smoke-test limit**: first {run_info['max_proteins']} proteins")
+    lines.append("")
+
+    # Identity metrics — same threshold tables as the full report
+    lines.append("## Identity-metric threshold counts")
+    lines.append("")
+    for mdef in summary["metric_definitions"]:
+        if mdef["kind"] != "identity":
+            continue
+        name = mdef["name"]
+        label = mdef["label"]
+        any_block = next(iter(summary["versions"].values()))["metrics"][name]
+        denom = any_block["n"]
+        lines.append(f"### {label}  (n = {denom})")
+        lines.append("")
+        header = "| Threshold | " + " | ".join(versions) + " |"
+        sep    = "|---|" + "|".join(["---:"] * len(versions)) + "|"
+        lines.append(header)
+        lines.append(sep)
+        for t in IDENTITY_THRESHOLDS:
+            row = [f"≥ {t}%"]
+            for v in versions:
+                c = summary["versions"][v]["metrics"][name][f"count_ge_{t}"]
+                row.append(_fmt_pct(c, denom))
+            lines.append("| " + " | ".join(row) + " |")
+        mean_row = ["mean"]
+        for v in versions:
+            mean_row.append(f"{summary['versions'][v]['metrics'][name]['mean']:.1f}%")
+        lines.append("| " + " | ".join(mean_row) + " |")
+        lines.append("")
+
+    # Count metrics — compact one-liner per metric
+    lines.append("## Count metrics")
+    lines.append("")
+    header = "| Metric | " + " | ".join(versions) + " |"
+    sep    = "|---|" + "|".join(["---:"] * len(versions)) + "|"
+    lines.append(header)
+    lines.append(sep)
+    for mdef in summary["metric_definitions"]:
+        if mdef["kind"] != "count":
+            continue
+        name = mdef["name"]
+        label = mdef["label"]
+        row = [f"{label} (mean)"]
+        for v in versions:
+            row.append(f"{summary['versions'][v]['metrics'][name]['mean']:.1f}")
+        lines.append("| " + " | ".join(row) + " |")
+    lines.append("")
+
+    # Head-to-head (capped at top 10 wins + top 10 losses)
+    if len(versions) >= 2:
+        last_v = versions[-1]
+        first_v = versions[0]
+        algo_key = "known_operator_in_predicted_motif"
+        rows: list[tuple] = []
+        for r in per_protein:
+            if not r.get("homologs_fetched"):
+                continue
+            vm = r["versions"]
+            scores = [vm.get(v, {}).get("metrics", {}).get(algo_key, 0)
+                      for v in versions]
+            if max(scores) - min(scores) > 1:
+                rows.append((r["ncbi_accession"], r.get("alias") or "",
+                              scores))
+
+        if rows:
+            lines.append(f"## Head-to-head: {last_v} − {first_v} "
+                         f"(predicted-motif identity to known operator)")
+            lines.append("")
+            rows.sort(key=lambda x: x[2][-1] - x[2][0], reverse=True)
+            wins = [r for r in rows if r[2][-1] - r[2][0] > 1]
+            losses = [r for r in rows if r[2][-1] - r[2][0] < -1]
+            cap = 10
+
+            def _table(subset, title):
+                if not subset:
+                    return
+                lines.append(f"### {title} (showing {min(len(subset), cap)}"
+                             f" of {len(subset)})")
+                lines.append("")
+                header = "| NCBI | Alias | " + " | ".join(versions) + f" | Δ |"
+                sep    = "|---|---|" + "|".join(["---:"] * len(versions)) + "|---:|"
+                lines.append(header)
+                lines.append(sep)
+                for acc, alias, scores in subset[:cap]:
+                    cells = [f"{s:.1f}%" for s in scores]
+                    delta = scores[-1] - scores[0]
+                    lines.append("| " + " | ".join(
+                        [acc, alias] + cells + [f"{delta:+.1f}%"]) + " |")
+                lines.append("")
+
+            _table(wins, f"{last_v} wins")
+            _table(list(reversed(losses)), f"{last_v} losses")
+
+            lines.append(f"**Net direction**: {last_v} wins on {len(wins)}, "
+                         f"loses on {len(losses)} (out of "
+                         f"{len(rows)} proteins where versions disagree by "
+                         f">1%).")
+            lines.append("")
+        else:
+            lines.append("_(all versions agree within 1% on every protein)_")
+            lines.append("")
+
+    return "\n".join(lines)
+
+
+# Path of the committed-to-repo summary, written on every run.
+LATEST_PATH = Path(__file__).resolve().parent / "LATEST.md"
+
+
 def render(results_dir: Path) -> None:
     run_info = json.loads((results_dir / "run_info.json").read_text())
     summary = json.loads((results_dir / "summary.json").read_text())
     per_protein = json.loads((results_dir / "per_protein.json").read_text())
 
+    # Per-run detailed report (with chart references) lives in the
+    # gitignored results/ dir alongside the PNGs.
     md = _emit_summary_markdown(summary, run_info, per_protein)
     (results_dir / "report.md").write_text(md)
 
     _emit_charts(summary, results_dir)
 
+    # Committed text-only summary — overwritten on every run.
+    latest_md = _emit_latest_markdown(summary, run_info, per_protein)
+    LATEST_PATH.write_text(latest_md)
+
     print(f"Wrote report.md and chart_*.png to {results_dir}")
+    print(f"Wrote {LATEST_PATH.name} to {LATEST_PATH.parent}")
 
 
 def main() -> None:
