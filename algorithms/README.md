@@ -94,11 +94,21 @@ python -m algorithms.benchmark.run --dataset path/to/my_dataset.json
 python -m algorithms.benchmark.run --max-proteins 10
 ```
 
-Output goes to `algorithms/benchmark/results/<YYYY-MM-DD_HH-MM-SS>/`:
-- `per_protein.json` — every protein's metrics for every version
-- `summary.json` — aggregated counts at each identity threshold
-- `report.md` — human-readable comparison
-- `chart_*.png` — distribution histograms per metric
+Each run writes two places:
+
+1. **`algorithms/benchmark/results/<YYYY-MM-DD_HH-MM-SS>/`** — timestamped
+   per-run history, gitignored. Contains the detailed report + PNG charts:
+   - `per_protein.json` — every protein's metrics for every version
+   - `summary.json` — aggregated counts at each identity threshold
+   - `report.md` — human-readable comparison
+   - `chart_*.png` — distribution histograms per metric
+
+2. **`algorithms/benchmark/LATEST.md`** — committed, overwritten on every
+   run. Compact text-only summary (~5 KB) of the most recent benchmark.
+   This is what you read in VSCode/GitHub without spelunking into the
+   gitignored results dir. Threshold-count tables + capped head-to-head
+   (top 10 wins + top 10 losses). For the full sorted head-to-head and
+   the PNG charts, open the matching per-run `report.md`.
 
 ## Datasets
 
