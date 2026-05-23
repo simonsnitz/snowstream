@@ -37,3 +37,6 @@ src/test_msa/
 
 # Precompute stage logs
 logs/
+
+# Algorithm benchmark results (timestamped, gitignored)
+algorithms/benchmark/results/
