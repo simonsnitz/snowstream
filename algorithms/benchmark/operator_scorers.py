@@ -288,6 +288,32 @@ def gc_strong(seq: str) -> float:
     return 1.0 * at_content(seq) + 0.3 * length_preference(seq)
 
 
+# Intermediate variants — sweep the gradient between gc_weak ↔ gc_strong
+# more densely to find the actual sweet spot. The first round (V2.5/2.6/
+# 2.7) showed gc_medium_weak (0.5 AT + 0.3 length) was best of the three
+# coarse points, with gc_weak (V2.5) and gc_strong (V2.7) each ~3.3pp
+# below it on mean identity. These four insert between those points.
+
+def gc_weak_plus(seq: str) -> float:
+    """Between gc_weak and gc_medium_weak, closer to weak."""
+    return 0.3 * at_content(seq) + 0.4 * length_preference(seq)
+
+
+def gc_weak_strong(seq: str) -> float:
+    """Between gc_weak and gc_medium_weak, closer to medium-weak."""
+    return 0.4 * at_content(seq) + 0.35 * length_preference(seq)
+
+
+def gc_medium(seq: str) -> float:
+    """Between gc_medium_weak and gc_strong, closer to medium-weak."""
+    return 0.65 * at_content(seq) + 0.3 * length_preference(seq)
+
+
+def gc_medium_strong(seq: str) -> float:
+    """Between gc_medium_weak and gc_strong, closer to strong."""
+    return 0.8 * at_content(seq) + 0.3 * length_preference(seq)
+
+
 # Backward-compatibility alias — `combined_v2` was the name PR #14's
 # score-classifier benchmark + the first operator_fetch v1 used. Keep
 # resolvable so existing benchmark JSON / docs still load, but prefer
@@ -324,10 +350,18 @@ SCORERS: list[tuple[str, Callable[[str], float], str]] = [
     ("combined_v3",                      combined_v3,
      "AT + core-vs-flank + CG penalty (shape-only)"),
     ("gc_weak",                          gc_weak,
-     "Light AT bias (0.2 · AT + 0.5 · length) — GC-penalty gradient: weak"),
+     "Light AT bias (0.2 · AT + 0.5 · length) — gradient point 1/7"),
+    ("gc_weak_plus",                     gc_weak_plus,
+     "(0.3 · AT + 0.4 · length) — gradient point 2/7 (weak → medium-weak)"),
+    ("gc_weak_strong",                   gc_weak_strong,
+     "(0.4 · AT + 0.35 · length) — gradient point 3/7"),
     ("gc_medium_weak",                   gc_medium_weak,
-     "Moderate AT bias (0.5 · AT + 0.3 · length) — GC-penalty gradient: medium-weak"),
+     "(0.5 · AT + 0.3 · length) — gradient point 4/7 (medium-weak)"),
+    ("gc_medium",                        gc_medium,
+     "(0.65 · AT + 0.3 · length) — gradient point 5/7 (medium-weak → strong)"),
+    ("gc_medium_strong",                 gc_medium_strong,
+     "(0.8 · AT + 0.3 · length) — gradient point 6/7"),
     ("gc_strong",                        gc_strong,
-     "Strong AT bias (1.0 · AT + 0.3 · length) — GC-penalty gradient: strong "
+     "Strong AT bias (1.0 · AT + 0.3 · length) — gradient point 7/7 "
      "(was `combined_v2` in PR #14)"),
 ]

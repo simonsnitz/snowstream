@@ -126,6 +126,40 @@ VERSIONS: dict[str, dict] = {
                          "end of the V2.x gradient. May regress on "
                          "GC-rich hosts (Streptomyces, Mycobacterium)."),
     },
+
+    # --- V2.8-V2.11: intermediate GC-penalty scorers ----------------------
+    # Densify the GC-penalty gradient on the widened-pool side, where the
+    # action is. V2.5 (weak) → V2.6 (medium-weak) → V2.7 (strong) showed
+    # V2.6 was best; these four fill in points between the coarse trio.
+
+    "v2.8": {
+        "operon_fetch":   operon_fetch.v0.fetch,
+        "promoter_fetch": promoter_fetch.v0.fetch,
+        "operator_fetch": _bind_operator_v1("widened", "gc_weak_plus"),
+        "description": ("Widened pool + 0.3·AT + 0.4·length. Between V2.5 "
+                         "(weak) and V2.6 (medium-weak), closer to weak."),
+    },
+    "v2.9": {
+        "operon_fetch":   operon_fetch.v0.fetch,
+        "promoter_fetch": promoter_fetch.v0.fetch,
+        "operator_fetch": _bind_operator_v1("widened", "gc_weak_strong"),
+        "description": ("Widened pool + 0.4·AT + 0.35·length. Between V2.5 "
+                         "and V2.6, closer to medium-weak."),
+    },
+    "v2.10": {
+        "operon_fetch":   operon_fetch.v0.fetch,
+        "promoter_fetch": promoter_fetch.v0.fetch,
+        "operator_fetch": _bind_operator_v1("widened", "gc_medium"),
+        "description": ("Widened pool + 0.65·AT + 0.3·length. Between V2.6 "
+                         "and V2.7, closer to medium-weak."),
+    },
+    "v2.11": {
+        "operon_fetch":   operon_fetch.v0.fetch,
+        "promoter_fetch": promoter_fetch.v0.fetch,
+        "operator_fetch": _bind_operator_v1("widened", "gc_medium_strong"),
+        "description": ("Widened pool + 0.8·AT + 0.3·length. Between V2.6 "
+                         "and V2.7, closer to strong."),
+    },
 }
 
 
