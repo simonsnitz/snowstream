@@ -33,9 +33,11 @@ import datetime
 import json
 import os
 import sys
+import threading
 import time
 import urllib.error
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -128,94 +130,133 @@ def _fetch_homologs(entry: dict) -> list[dict]:
 
 # --- main loop -----------------------------------------------------------
 
+def _process_one(entry: dict, version_names: list[str],
+                  params: dict) -> dict:
+    """Run the snowstream fetch + every requested version's pipeline for a
+    single protein. Returns the per-protein record (same shape as before).
+    Designed to be safe to call from a thread pool — no shared mutable
+    state inside."""
+    acc = entry.get("ncbi_accession")
+    alias = entry.get("alias") or ""
+
+    t0 = time.time()
+    homologs = _fetch_homologs(entry)
+    fetch_secs = round(time.time() - t0, 2)
+    if not homologs:
+        return {
+            "ncbi_accession": acc, "alias": alias,
+            "sources": entry.get("sources"),
+            "uniprot_id": entry.get("uniprot_id"),
+            "homologs_fetched": False,
+            "versions": {},
+            "_fetch_secs": fetch_secs,
+        }
+
+    record: dict = {
+        "ncbi_accession": acc, "alias": alias,
+        "sources": entry.get("sources"),
+        "uniprot_id": entry.get("uniprot_id"),
+        "homologs_fetched": True,
+        "n_homologs_returned": len(homologs),
+        "homolog_fetch_seconds": fetch_secs,
+        "versions": {},
+    }
+
+    for vname in version_names:
+        v = get_version(vname)
+        t1 = time.time()
+        try:
+            out = pipeline.run(v, homologs, params)
+        except Exception as e:
+            out = {"error": f"{type(e).__name__}: {e}",
+                    "operator_result": None,
+                    "n_homologs": len(homologs),
+                    "n_homologs_with_promoter": 0,
+                    "query_promoter": None,
+                    "all_homolog_promoters": [],
+                    "all_query_candidates": []}
+        run_secs = round(time.time() - t1, 2)
+        m = metrics_mod.compute_all(entry, out)
+        record["versions"][vname] = {
+            "metrics": m,
+            "run_seconds": run_secs,
+            "n_query_candidates": len(out.get("all_query_candidates") or []),
+            "n_homologs_with_promoter": out.get("n_homologs_with_promoter", 0),
+            "predicted_motif": _render_motif(
+                (out.get("operator_result") or {}).get("motif")),
+            "consensus_score":
+                (out.get("operator_result") or {}).get("consensus_score"),
+            "error": out.get("error"),
+        }
+    return record
+
+
 def run(dataset_path: Path, version_names: list[str],
-        max_proteins: int | None, out_dir: Path) -> None:
+        max_proteins: int | None, out_dir: Path, workers: int = 1) -> None:
     dataset = json.loads(dataset_path.read_text())
     if max_proteins:
         dataset = dataset[:max_proteins]
 
-    per_protein: list[dict] = []
     promoter_params = DEFAULT_PROMOTER_PARAMS
     operator_params = DEFAULT_OPERATOR_PARAMS
+    full_params = {**promoter_params, **operator_params}
 
     print(f"Dataset:   {dataset_path}  ({len(dataset)} proteins)", flush=True)
     print(f"Versions:  {', '.join(version_names)}", flush=True)
+    print(f"Workers:   {workers}", flush=True)
     print(f"Output:    {out_dir}", flush=True)
     print()
 
-    for i, entry in enumerate(dataset, start=1):
-        acc = entry.get("ncbi_accession")
+    per_protein: list[dict] = [None] * len(dataset)  # type: ignore
+    write_lock = threading.Lock()
+    completed = 0
+    total = len(dataset)
+
+    def _emit(i: int, entry: dict, record: dict) -> None:
+        nonlocal completed
+        acc = entry.get("ncbi_accession") or ""
         alias = entry.get("alias") or ""
-        print(f"[{i:>3}/{len(dataset)}] {acc:<18} {alias:<14}", end=" ",
-              flush=True)
+        with write_lock:
+            per_protein[i] = record
+            completed += 1
+            if record.get("homologs_fetched"):
+                scores = " ".join(
+                    f"{v}={record['versions'][v]['metrics']['known_operator_in_predicted_motif']:.0f}%"
+                    for v in version_names)
+                print(f"[{completed:>3}/{total}] {acc:<18} {alias:<14} → algo: {scores}",
+                      flush=True)
+            else:
+                print(f"[{completed:>3}/{total}] {acc:<18} {alias:<14} → no homologs",
+                      flush=True)
+            # Snapshot to disk so a crash doesn't lose progress
+            (out_dir / "per_protein.json").write_text(
+                json.dumps([r for r in per_protein if r is not None], indent=2))
 
-        t0 = time.time()
-        homologs = _fetch_homologs(entry)
-        fetch_secs = round(time.time() - t0, 2)
-        if not homologs:
-            print(f"→ no homologs ({fetch_secs}s)")
-            per_protein.append({
-                "ncbi_accession": acc, "alias": alias,
-                "sources": entry.get("sources"),
-                "uniprot_id": entry.get("uniprot_id"),
-                "homologs_fetched": False,
-                "versions": {},
-            })
-            continue
+    if workers <= 1:
+        for i, entry in enumerate(dataset):
+            record = _process_one(entry, version_names, full_params)
+            _emit(i, entry, record)
+    else:
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            futures = {pool.submit(_process_one, entry, version_names, full_params): i
+                        for i, entry in enumerate(dataset)}
+            for fut in as_completed(futures):
+                i = futures[fut]
+                entry = dataset[i]
+                try:
+                    record = fut.result()
+                except Exception as e:
+                    record = {
+                        "ncbi_accession": entry.get("ncbi_accession"),
+                        "alias": entry.get("alias"),
+                        "homologs_fetched": False,
+                        "versions": {},
+                        "_error": f"{type(e).__name__}: {e}",
+                    }
+                _emit(i, entry, record)
 
-        record: dict = {
-            "ncbi_accession": acc, "alias": alias,
-            "sources": entry.get("sources"),
-            "uniprot_id": entry.get("uniprot_id"),
-            "homologs_fetched": True,
-            "n_homologs_returned": len(homologs),
-            "homolog_fetch_seconds": fetch_secs,
-            "versions": {},
-        }
-
-        for vname in version_names:
-            v = get_version(vname)
-            t1 = time.time()
-            try:
-                out = pipeline.run(v, homologs,
-                                    {**promoter_params, **operator_params})
-            except Exception as e:
-                out = {"error": f"{type(e).__name__}: {e}",
-                        "operator_result": None,
-                        "n_homologs": len(homologs),
-                        "n_homologs_with_promoter": 0,
-                        "query_promoter": None,
-                        "all_homolog_promoters": [],
-                        "all_query_candidates": []}
-            run_secs = round(time.time() - t1, 2)
-            m = metrics_mod.compute_all(entry, out)
-            record["versions"][vname] = {
-                "metrics": m,
-                "run_seconds": run_secs,
-                "n_query_candidates": len(out.get("all_query_candidates") or []),
-                "n_homologs_with_promoter":
-                    out.get("n_homologs_with_promoter", 0),
-                "predicted_motif": _render_motif(
-                    (out.get("operator_result") or {}).get("motif")),
-                "consensus_score":
-                    (out.get("operator_result") or {}).get("consensus_score"),
-                "error": out.get("error"),
-            }
-
-        # Print a one-line per-version score so the operator can sanity-
-        # check progress.
-        scores = " ".join(
-            f"{v}={record['versions'][v]['metrics']['known_operator_in_predicted_motif']:.0f}%"
-            for v in version_names)
-        print(f"→ algo: {scores}")
-
-        per_protein.append(record)
-
-        (out_dir / "per_protein.json").write_text(
-            json.dumps(per_protein, indent=2))
-
-    # Aggregate summary
-    summary = _aggregate(per_protein, version_names)
+    per_protein_clean = [r for r in per_protein if r is not None]
+    summary = _aggregate(per_protein_clean, version_names)
     (out_dir / "summary.json").write_text(json.dumps(summary, indent=2))
     print(f"\nWrote per_protein.json and summary.json to {out_dir}")
 
@@ -281,6 +322,10 @@ def main() -> None:
                     help="Output directory (default: results/<timestamp>)")
     p.add_argument("--render-report", action="store_true",
                     help="Also render the markdown + PNG report after the run")
+    p.add_argument("--workers", type=int, default=4,
+                    help="Process N proteins concurrently (default: 4). Set to 1 "
+                         "for fully sequential. Each worker still calls NCBI "
+                         "serially; we just parallelise across proteins.")
     args = p.parse_args()
 
     for v in args.versions:
@@ -301,7 +346,8 @@ def main() -> None:
         "max_proteins": args.max_proteins,
     }, indent=2))
 
-    run(args.dataset, args.versions, args.max_proteins, out_dir)
+    run(args.dataset, args.versions, args.max_proteins, out_dir,
+         workers=args.workers)
 
     if args.render_report:
         from algorithms.benchmark import report as report_mod

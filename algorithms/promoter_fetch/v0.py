@@ -22,6 +22,14 @@ from .._shared import ncbi_efetch_nuccore
 
 
 def fetch(operon_data: dict, params: dict) -> Optional[str]:
+    # Fast path: snowstream's smart-lookup already cached the V0 promoter
+    # for every member in the precomputed members DB. Reuse it when present
+    # and length-valid — saves an NCBI eFetch round-trip per homolog.
+    cached = operon_data.get("cached_promoter")
+    if cached and isinstance(cached, str):
+        if params["min_length"] <= len(cached) <= params["max_length"]:
+            return cached
+
     operon = operon_data["operon"]
     reg_idx = operon_data["protein_index"]
     genome_id = operon_data["genome"]

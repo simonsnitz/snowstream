@@ -1,0 +1,338 @@
+[
+  {
+    "sequence": "ggggcGATAACAAACCGACTTGCCGGTTTGTCAACgccgg",
+    "ncbi_accession": "AAB36583.1",
+    "alias": "JadR2",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 48.4,
+    "v0_consensus_score": 56.097
+  },
+  {
+    "sequence": "atcccGCCCGCTTCGTAGCGGGCcggac",
+    "ncbi_accession": "AAB62296.1",
+    "alias": "CymR",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 42.9,
+    "v0_consensus_score": 61.674
+  },
+  {
+    "sequence": "cgccgGCGGGGTGCGTGGCGCCGCGCACCCCGCcgccg",
+    "ncbi_accession": "AAC01726.1",
+    "alias": "RifQ",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 30.8,
+    "v0_consensus_score": 54.134
+  },
+  {
+    "sequence": "tctgcCCCGCACGCGCGGCGCGTGCGGGgaacg",
+    "ncbi_accession": "AAK15050.1",
+    "alias": "TtgR",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 28.6,
+    "v0_consensus_score": 73.4
+  },
+  {
+    "sequence": "gccgcGGCCACGCGTGGCCgcggg",
+    "ncbi_accession": "ABK70852.1",
+    "alias": "DarR",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 33.3,
+    "v0_consensus_score": 67.166
+  },
+  {
+    "sequence": "cgatcGGCGTGCGTATCGTTTACGATACGCACGCAgcacg",
+    "ncbi_accession": "ABK75291.1",
+    "alias": "KstR",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 48.3,
+    "v0_consensus_score": 48.563
+  },
+  {
+    "sequence": "gctctCGTACATTGTACCGGTACCCGTACAATGTACGagatg",
+    "ncbi_accession": "ACS29497.1",
+    "alias": "MdoR",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 40.0,
+    "v0_consensus_score": 62.735
+  },
+  {
+    "sequence": "gtcgcCGGCCGGGCGCGGCGCCGCCGTGACCGGCCGccggc",
+    "ncbi_accession": "AEH42489.1",
+    "alias": "CalR3",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 35.5,
+    "v0_consensus_score": 57.34
+  },
+  {
+    "sequence": "gtgcaGCCGGGTTTCCGCGTCGCCGTCACCCCGGCct",
+    "ncbi_accession": "AKU14494.1",
+    "alias": "HbdR",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 40.0,
+    "v0_consensus_score": 88.094
+  },
+  {
+    "sequence": "gcaggCGTCCGGCCCACGCAGGGCCCGGACGccagc",
+    "ncbi_accession": "ALM36829.1",
+    "alias": "SFR_0214",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 40.0,
+    "v0_consensus_score": 69.461
+  },
+  {
+    "sequence": "acgcgCCAGCGTGAGGGCGGTCGGCCTCTGGCTGGgcggg",
+    "ncbi_accession": "AMR55379.1",
+    "alias": "NdpR",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 39.4,
+    "v0_consensus_score": 61.852
+  },
+  {
+    "sequence": "tagttTAACGCGTCATCAAAACCCGTTAagggg",
+    "ncbi_accession": "BAB99883.1",
+    "alias": "CgFasR",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 48.0,
+    "v0_consensus_score": 71.323
+  },
+  {
+    "sequence": "ggccaGCGCCCACTCGGGGGGAGTGGGAGCcggcc",
+    "ncbi_accession": "CAC87048.1",
+    "alias": "SmeT",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 28.6,
+    "v0_consensus_score": 65.454
+  },
+  {
+    "sequence": "ggtcgGAGCCCCCGCGGGGGCTGCgaccc",
+    "ncbi_accession": "MBE1599770.1",
+    "alias": "H4687_005899",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 42.9,
+    "v0_consensus_score": 67.157
+  },
+  {
+    "sequence": "gccgcCCCGTCGCGACAGGccggc",
+    "ncbi_accession": "QWF22305.1",
+    "alias": "PnbX",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 36.4,
+    "v0_consensus_score": 77.389
+  },
+  {
+    "sequence": "aaaaaCATGATTGAATCATGcccgt",
+    "ncbi_accession": "WP_000113609.1",
+    "alias": "RamR",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 45.8,
+    "v0_consensus_score": 100.0
+  },
+  {
+    "sequence": "gctccGGGGATGATAGGTTTCTCACCACCggccg",
+    "ncbi_accession": "WP_001137892.1",
+    "alias": "MphR",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 47.8,
+    "v0_consensus_score": 46.146
+  },
+  {
+    "sequence": "tctatTGCAAATTAAAATACTATCAATTACCAtatgg",
+    "ncbi_accession": "WP_002497698.1",
+    "alias": "IcaR",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 40.9,
+    "v0_consensus_score": 81.216
+  },
+  {
+    "sequence": "ccgctATTTTTACCAAGCAATTGCTTGGTGAAAATaaagg",
+    "ncbi_accession": "WP_003080639.1",
+    "alias": "EHN63435",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 47.4,
+    "v0_consensus_score": 58.266
+  },
+  {
+    "sequence": "aagcaGCGGGGCGCGCCCCGCtggat",
+    "ncbi_accession": "WP_003084488.1",
+    "alias": "PA0367",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 26.1,
+    "v0_consensus_score": 74.222
+  },
+  {
+    "sequence": "agggcGCAGGCAAGTGGCTTCCCTGCgcgcc",
+    "ncbi_accession": "WP_003092152.1",
+    "alias": "NalD",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 47.6,
+    "v0_consensus_score": 70.134
+  },
+  {
+    "sequence": "ggcgcGGGGCGGGCGCCGGACCGGCGTCCGCTCCgcgcc",
+    "ncbi_accession": "WP_003113688.1",
+    "alias": "CurR",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 46.7,
+    "v0_consensus_score": 69.48
+  },
+  {
+    "sequence": "agtttAGCAGTACGCTTGTCCTGCTatagt",
+    "ncbi_accession": "WP_003407514.1",
+    "alias": "Rv1474c",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 47.6,
+    "v0_consensus_score": 73.873
+  },
+  {
+    "sequence": "gagtcGGACGCGTGGGGAGTTCCCGCCGCGGCCgcgcc",
+    "ncbi_accession": "WP_003411595.1",
+    "alias": "JTY_2262",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 39.5,
+    "v0_consensus_score": 59.018
+  },
+  {
+    "sequence": "gagccTAACGCGAGTCAGACATGCGGTAgccgc",
+    "ncbi_accession": "WP_003412790.1",
+    "alias": "Fad35R",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 42.9,
+    "v0_consensus_score": 45.3
+  },
+  {
+    "sequence": "gcgacACCCGCGCCAGCTCGGGTtgcgc",
+    "ncbi_accession": "WP_003416573.1",
+    "alias": "Rv3160c",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 35.7,
+    "v0_consensus_score": 63.147
+  },
+  {
+    "sequence": "agagtCGCTGAAATTTTGCAATGACTCCAAAATTTCAGTGactcc",
+    "ncbi_accession": "WP_003973613.1",
+    "alias": "sco5384",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 38.9,
+    "v0_consensus_score": 67.8
+  },
+  {
+    "sequence": "ccgccCGGTGCCCGGGGGCACCGtcccc",
+    "ncbi_accession": "WP_009944749.1",
+    "alias": "AcrT",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 35.0,
+    "v0_consensus_score": 82.983
+  },
+  {
+    "sequence": "cgccgGTGCGCGCGCGCACcgcca",
+    "ncbi_accession": "WP_009946947.1",
+    "alias": "SACE_0303",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 42.9,
+    "v0_consensus_score": 66.569
+  },
+  {
+    "sequence": "catccGGCGGGCCACCCCGGGGTTCAGGTCCGGGGTGGCCCGCCggatg",
+    "ncbi_accession": "WP_011028825.1",
+    "alias": "SCO3201",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 45.0,
+    "v0_consensus_score": 88.194
+  },
+  {
+    "sequence": "ggggcGTCCGCCGCGGGCGGCGCGCACTCGCCGAACcgggg",
+    "ncbi_accession": "WP_011030795.1",
+    "alias": "ScbR2",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 41.4,
+    "v0_consensus_score": 67.02
+  },
+  {
+    "sequence": "gcgccGGCCCGCCCCACCGGGCGGGCCggtgg",
+    "ncbi_accession": "WP_011227711.1",
+    "alias": "TtFadR",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 29.0,
+    "v0_consensus_score": 73.613
+  },
+  {
+    "sequence": "taggcATGGCAGCTGATCGGCGCCGATCACCACCCATgatgc",
+    "ncbi_accession": "WP_011336736.1",
+    "alias": "AcuR",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 34.3,
+    "v0_consensus_score": 54.168
+  },
+  {
+    "sequence": "ccttcTGTTACACCGTAACAgtccg",
+    "ncbi_accession": "WP_012480398.1",
+    "alias": "MfsR",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 41.7,
+    "v0_consensus_score": 48.159
+  },
+  {
+    "sequence": "tctgcCCCGCACGCGCGGCGCGTGCGGGgaacg",
+    "ncbi_accession": "WP_014859138.1",
+    "alias": "TtgR",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 28.6,
+    "v0_consensus_score": 72.909
+  },
+  {
+    "sequence": "aaagcCAGTATCGGGACTCCGCGATTCTGcccct",
+    "ncbi_accession": "WP_016359483.1",
+    "alias": "HdnoR",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 37.9,
+    "v0_consensus_score": 100.0
+  },
+  {
+    "sequence": "tgcccTGCCTAACCCATGCGGTCAGGCAttcag",
+    "ncbi_accession": "WP_021690437.1",
+    "alias": "EdcR",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 48.1,
+    "v0_consensus_score": 100.0
+  },
+  {
+    "sequence": "ttgtaGGTCTTACCGCGTTCGAGGTAAGTCCcaagg",
+    "ncbi_accession": "WP_024087624.1",
+    "alias": "NicR2",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 47.1,
+    "v0_consensus_score": 59.375
+  },
+  {
+    "sequence": "cggccGAGGCGGACCCGCCCGCCTCgccgg",
+    "ncbi_accession": "WP_033220308.1",
+    "alias": "VarR",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 30.0,
+    "v0_consensus_score": 68.284
+  },
+  {
+    "sequence": "gaaacGCGCCGGCGGCAGTGCGCCGGCGCgcccg",
+    "ncbi_accession": "WP_035269502.1",
+    "alias": "HpaR",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 43.8,
+    "v0_consensus_score": 59.456
+  },
+  {
+    "sequence": "tagttTACAATCGCTTGGTAAAAGTGATTGACgagca",
+    "ncbi_accession": "WP_050417930.1",
+    "alias": "MbdR",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 41.2,
+    "v0_consensus_score": 50.0
+  },
+  {
+    "sequence": "cctccCGGGCGGCGCCGCCCGcccgg",
+    "ncbi_accession": "WP_067435216.1",
+    "alias": "SLCG_2919",
+    "source": "v0_predicted_motif",
+    "v0_identity_to_known": 34.8,
+    "v0_consensus_score": 68.033
+  }
+]

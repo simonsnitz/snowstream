@@ -17,3 +17,4 @@ and the return is:
 """
 
 from . import v0  # noqa: F401
+from . import v1  # noqa: F401
