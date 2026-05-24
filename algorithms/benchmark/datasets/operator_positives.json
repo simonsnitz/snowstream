@@ -1,0 +1,1451 @@
+[
+  {
+    "sequence": "AGAAAACCGCGCTGTACGTATTCTACGATCG",
+    "ncbi_accession": "AAB36583.1",
+    "alias": "JadR2",
+    "doi": "10.1111/j.1365-2958.2011.07811.x",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "AACAAACAGACAATCTGGTCTGTTTGTATTAT",
+    "ncbi_accession": "AAB62296.1",
+    "alias": "CymR",
+    "doi": "10.1128/AEM.00413-10",
+    "source": [
+      "groovDB",
+      "snowprint"
+    ]
+  },
+  {
+    "sequence": "TTCTTATACACCATATAAGGGTCGGT",
+    "ncbi_accession": "AAC01726.1",
+    "alias": "RifQ",
+    "doi": "10.1186/s12934-018-0863-5",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "ATTCTACTTGACGGTCGGTAAG",
+    "ncbi_accession": "AAD13556.1",
+    "alias": "LanK",
+    "doi": "10.1007/s00284-023-03528-1",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "GCTCTGGCGTACACCGTACCAATTGCGCT",
+    "ncbi_accession": "AAK06798.1",
+    "alias": "SimR",
+    "doi": "10.1111/j.1365-2958.2009.06735.x",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CCTTCTTCGTACGGTGTATGAATACGACG",
+    "ncbi_accession": "AAK06798.1",
+    "alias": "SimR",
+    "doi": "10.1111/j.1365-2958.2009.06735.x",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TACTTACATTCATGGTTGTTTGTAAATA",
+    "ncbi_accession": "AAK15050.1",
+    "alias": "TtgR",
+    "doi": "10.1128/AAC.47.10.3067-3072.2003",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TTATGTATGATACGAAACGTACCGTATCGTTAAGG",
+    "ncbi_accession": "AAY86547.1",
+    "alias": "PhlF",
+    "doi": "10.1128/JB.184.11.3008-3016.2002",
+    "source": [
+      "groovDB",
+      "snowprint"
+    ]
+  },
+  {
+    "sequence": "TAAGTTAAATTCAAATTTGACTTTTGTTTA",
+    "ncbi_accession": "AAY92066.1",
+    "alias": "PltZ",
+    "doi": "10.1128/aem.01743-23",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "GATCTCTGTAAGCATTTACTACATGACAGGAA",
+    "ncbi_accession": "AAZ77685.1",
+    "alias": "ChlF1",
+    "doi": "10.1074/jbc.M115.695874",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TATGCAGTAAACATTTACCGCACTTTAGCG",
+    "ncbi_accession": "AAZ77685.1",
+    "alias": "ChlF1",
+    "doi": "10.1074/jbc.M115.695874",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CCACTCTGTAAGTATTTACCGTACAGGCGT",
+    "ncbi_accession": "AAZ77685.1",
+    "alias": "ChlF1",
+    "doi": "10.1074/jbc.M115.695874",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "GATCAACCGGACCGCAGTCCGATTCAT",
+    "ncbi_accession": "ABK70543.1",
+    "alias": "MSMEG_2295",
+    "doi": "10.1099/mic.0.001097",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "ACCAGGGATACTACGGAGTATTACGGTAA",
+    "ncbi_accession": "ABK70852.1",
+    "alias": "DarR",
+    "doi": "10.1074/jbc.M112.428110",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CGTCGTATTGACTTTGTGCAAGGTCAAAGCT",
+    "ncbi_accession": "ABK75291.1",
+    "alias": "KstR",
+    "doi": "10.1099/mic.0.049213-0",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TACAAACAACCGTATACGTAAGTA",
+    "ncbi_accession": "ACO06750.1",
+    "alias": "EmhR",
+    "doi": "10.1111/1462-2920.15354",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CCTCCGTACGCTGTACGTAATGCAACGTACAACGTACGAAT",
+    "ncbi_accession": "ACS29497.1",
+    "alias": "MdoR",
+    "doi": "10.1128/JB.05649-11",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "ATATGACCACGTGGTCACCG",
+    "ncbi_accession": "ADU73771",
+    "alias": "TetR_0692",
+    "doi": "10.3389/fmicb.2021.695517",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "TAGTAGGCTATCAATTGAAAGTCGACTCCTA",
+    "ncbi_accession": "AEH42489.1",
+    "alias": "CalR3",
+    "doi": "10.3389/fmicb.2017.02371",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "GTCTGGACAAAGTGAGAGATCGTGTCTAGACAACGCCACGGTTTTTGTCTAACCTCG",
+    "ncbi_accession": "AEM66515.1",
+    "alias": "AlkX",
+    "doi": "10.1111/mmi.13232",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TAGCCACGTCTGGACAAAGTGAGAGATCGTGTCTAGACAACGCCACGGTTTTTGTCTAACCTCGACCACA",
+    "ncbi_accession": "AEM66515.1",
+    "alias": "AlkX",
+    "doi": "10.1128/AEM.01447-17",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "GATGTACAACGCGTTGTACATC",
+    "ncbi_accession": "AFA75826.1",
+    "alias": "LcpRVH2",
+    "doi": "10.1099/mic.0.000755",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "AACTAGCCGTTCGGCTAGTT",
+    "ncbi_accession": "AIY20223.2",
+    "alias": "PinR",
+    "doi": "10.1038/s41467-020-14942-5",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "ATGAATAATTGTTCATTCAT",
+    "ncbi_accession": "AKU14494.1",
+    "alias": "HbdR",
+    "doi": "10.1016/j.micres.2024.127882",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "ACATGTGACACAGCCTGTCAGTTGT",
+    "ncbi_accession": "ALM36829.1",
+    "alias": "SFR_0214",
+    "doi": "10.1093/nar/gkaa1134",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "TTATTATTCGAGTGAATAATTTAGCG",
+    "ncbi_accession": "AMR55379.1",
+    "alias": "NdpR",
+    "doi": "10.1128/aem.00324-23",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TGGGTGACGAATAAATCCTTGGCGGCGGAATTTCCC",
+    "ncbi_accession": "AMR55379.1",
+    "alias": "NdpR",
+    "doi": "10.1128/aem.00324-23",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TAATTCTGCATCTGAATAAATACAAG",
+    "ncbi_accession": "AMR55379.1",
+    "alias": "NdpR",
+    "doi": "10.1128/aem.00324-23",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "AAATTATTGGACCGTATAATTATGAAC",
+    "ncbi_accession": "AMR55379.1",
+    "alias": "NdpR",
+    "doi": "10.1128/aem.00324-23",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TAATGTGCAGTTGAAGAAATACATT",
+    "ncbi_accession": "AMR55379.1",
+    "alias": "NdpR",
+    "doi": "10.1128/aem.00324-23",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CTCAGTATATCGCAGATATAGAGCCT",
+    "ncbi_accession": "BAA03510.1",
+    "alias": "CamR",
+    "doi": "10.1128/jb.177.11.3120-3127.1995",
+    "source": [
+      "groovDB",
+      "snowprint"
+    ]
+  },
+  {
+    "sequence": "TTTCAAAACATGACCATTTCCTCACCTTT",
+    "ncbi_accession": "BAB99883.1",
+    "alias": "CgFasR",
+    "doi": "10.1111/j.1365-2958.2010.07337.x",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CCCCAGAATATGAGTAAGTCCTCATATCT",
+    "ncbi_accession": "BAB99883.1",
+    "alias": "CgFasR",
+    "doi": "10.1111/j.1365-2958.2010.07337.x",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CCGAAATAGATGACTAAACCCTCATGTTT",
+    "ncbi_accession": "BAB99883.1",
+    "alias": "CgFasR",
+    "doi": "10.1111/j.1365-2958.2010.07337.x",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CCGCAAAAGATGACGTTTTCCTCATGATT",
+    "ncbi_accession": "BAB99883.1",
+    "alias": "CgFasR",
+    "doi": "10.1111/j.1365-2958.2010.07337.x",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "ACTGAACCGTTCAGT",
+    "ncbi_accession": "BAC49587.1",
+    "alias": "FrrA",
+    "doi": "10.1128/jb.06567-11",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "ACTGAACTGTTTAGT",
+    "ncbi_accession": "BAC49587.1",
+    "alias": "FrrA",
+    "doi": "10.1128/jb.06567-11",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "GCGTATGCCATACGC",
+    "ncbi_accession": "BAG20808.1",
+    "alias": "SGR_3979",
+    "doi": "10.1093/nar/gkaa1134",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "TTTACAAACAAACAAGCATGTATGTATA",
+    "ncbi_accession": "CAC87048.1",
+    "alias": "SmeT",
+    "doi": "10.1074/jbc.M809221200",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "ttactagatcaaaTTAAATTGGAATTTGAt",
+    "ncbi_accession": "CEI21729.1",
+    "alias": "PltZ",
+    "doi": "10.3389/fmicb.2020.01423",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "gaTTGTATAACCGTTATACAAtacgacc",
+    "ncbi_accession": "MBE1599770.1",
+    "alias": "H4687_005899",
+    "doi": "10.1093/nar/gkaa1134",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "ATGACACAGTGTCATAAATT",
+    "ncbi_accession": "NP_266817.1",
+    "alias": "HrtR",
+    "doi": "10.1074/jbc.M111.297531",
+    "source": [
+      "groovDB",
+      "snowprint"
+    ]
+  },
+  {
+    "sequence": "CATTTTATATTGAACGTCCAATGAATAACC",
+    "ncbi_accession": "NP_414847.3",
+    "alias": "BetI",
+    "doi": "10.1128/jb.178.6.1663-1670.1996",
+    "source": [
+      "groovDB",
+      "snowprint"
+    ]
+  },
+  {
+    "sequence": "TGTAAATTTTGACCATTTGGTCCACTTTTTTCT",
+    "ncbi_accession": "NP_415533.1",
+    "alias": "RutR",
+    "doi": "10.1093/nar/gkq385",
+    "source": [
+      "groovDB",
+      "snowprint"
+    ]
+  },
+  {
+    "sequence": "aaAAACCTTCggGAAGGTTTgac",
+    "ncbi_accession": "NP_639852.1",
+    "alias": "MmfR",
+    "doi": "10.1038/s41586-021-03195-x",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "GGAAATCAATAGGTCCATAGAAAATCTATTGACTAATCGAAT",
+    "ncbi_accession": "QOQ86083.1",
+    "alias": "FcbR",
+    "doi": "10.1128/aem.02652-20",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TTTATTTACAACTACTGCCTGTAATGTTACTCTC",
+    "ncbi_accession": "QWF22305.1",
+    "alias": "PnbX",
+    "doi": "10.1111/1462-2920.15787",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "ATTGCACTagatAGTGCAAT",
+    "ncbi_accession": "SEE04737.1",
+    "alias": "SEE04737",
+    "doi": "10.1038/s42003-024-05849-8",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TTGTGAATgagATTCACAA",
+    "ncbi_accession": "SMC09139.1",
+    "alias": "SMC09139",
+    "doi": "10.1038/s42003-024-05849-8",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "AACTGAGTACAGCGTACCCGATTACGCGTACGCCGTACCCAGTT",
+    "ncbi_accession": "WOT35542.1",
+    "alias": "DrrR1",
+    "doi": "10.1111/1751-7915.70023",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TTTACATACATTTGTGAATGTATGTACC",
+    "ncbi_accession": "WP_000101737",
+    "alias": "EcAcrR",
+    "doi": "10.1016/j.bbrc.2007.06.175",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CACTCTATCATTGATAGGGA",
+    "ncbi_accession": "WP_000113282.1",
+    "alias": "TetR",
+    "doi": "10.1038/73324",
+    "source": [
+      "groovDB",
+      "snowprint"
+    ]
+  },
+  {
+    "sequence": "TATAATGAGTGCTTACTCACTCATAATCA",
+    "ncbi_accession": "WP_000113609.1",
+    "alias": "RamR",
+    "doi": "10.1128/aac.05444-11",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "GGACACTTAAGGCAAATTGTTCAGAACTGAATA",
+    "ncbi_accession": "WP_000181689.1",
+    "alias": "SczA",
+    "doi": "10.1111/j.1365-2958.2007.05849.x",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TGAACAAGGTGTTCA",
+    "ncbi_accession": "WP_000181689.1",
+    "alias": "SczA",
+    "doi": "10.1111/j.1365-2958.2007.05849.x",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CCTGACTGAATTCGACACAAATTACATTAAAA",
+    "ncbi_accession": "WP_000323807.1",
+    "alias": "AmvR",
+    "doi": "10.1128/mbio.00081-25",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "ATAATAACCATGATTTGAACACATGTCCAAGT",
+    "ncbi_accession": "WP_000323807.1",
+    "alias": "AmvR",
+    "doi": "10.1128/mbio.00081-25",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TTTAAATATACAGTGTAGATTATTG",
+    "ncbi_accession": "WP_000665238.1",
+    "alias": "FarR",
+    "doi": "10.1128/JB.00602-18",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "AATGTAAACCCGAGAGTTTACATT",
+    "ncbi_accession": "WP_000777169.1",
+    "alias": "BreR",
+    "doi": "10.1021/acsbiomaterials.2c01006",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "AAAGTAAACTCGTTGGTGTACTT",
+    "ncbi_accession": "WP_000777169.1",
+    "alias": "BreR",
+    "doi": "10.1128/jb.02008-12",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TAGACCGACTGGTCTACTACACTCC",
+    "ncbi_accession": "WP_001032936.1",
+    "alias": "NemR",
+    "doi": "10.1128/JB.00459-08",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "GATTGAATATAACCGACGTGACTGTTACATTTAGG",
+    "ncbi_accession": "WP_001137892.1",
+    "alias": "MphR",
+    "doi": "10.1128/jb.182.18.5052-5058.2000",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "gttttataATAAACGGAgagttaTCCGTTTGTcaa",
+    "ncbi_accession": "WP_001224188.1",
+    "alias": "GbaA",
+    "doi": "10.1016/j.freeradbiomed.2021.10.024",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "AGTATAACTGTACGGTACGGTTTAGTTAT",
+    "ncbi_accession": "WP_001264144.1",
+    "alias": "VceR",
+    "doi": "10.1016/j.jmb.2005.03.045",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "AATTAGTTTACTAACTAATT",
+    "ncbi_accession": "WP_001296991.1",
+    "alias": "CecR",
+    "doi": "10.1099/mic.0.000292",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CTTATAGACCGATCGCACGGTCTATAAG",
+    "ncbi_accession": "WP_001807342.1",
+    "alias": "QacR",
+    "doi": "10.1074/jbc.273.29.18665",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "ACCTAACTAACGAAAGGTAGGT",
+    "ncbi_accession": "WP_002497698.1",
+    "alias": "IcaR",
+    "doi": "10.1093/nar/gkm1176",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TTTCTGTAATAAATATTACAATTT",
+    "ncbi_accession": "WP_002857627.1",
+    "alias": "CmeR",
+    "doi": "10.1128/AAC.49.3.1067-1075.2005",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "AAGGAGGCGCAAGCGCCTCCTTGCTT",
+    "ncbi_accession": "WP_003080639.1",
+    "alias": "EHN63435",
+    "doi": "10.1007/s11033-021-06566-9",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "AGCGGGCCATTGGCCCGCT",
+    "ncbi_accession": "WP_003080639.1",
+    "alias": "EHN63435",
+    "doi": "10.1007/s11033-021-06566-9",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "tttcTAGAGTAaaTACTCTAaagt",
+    "ncbi_accession": "WP_003084488.1",
+    "alias": "PA0367",
+    "doi": "10.1128/AEM.01352-19",
+    "source": [
+      "snowprint"
+    ]
+  },
+  {
+    "sequence": "TAATCACTCATGATTGATTA",
+    "ncbi_accession": "WP_003088626.1",
+    "alias": "PA2020",
+    "doi": "10.1093/nar/gkaa1134",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "CCAAGCGCTTGCT",
+    "ncbi_accession": "WP_003090989.1",
+    "alias": "AtuR",
+    "doi": "10.1093/nar/gkaa1134",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "CAAACGCCTGTTTG",
+    "ncbi_accession": "WP_003091195.1",
+    "alias": "PsrA",
+    "doi": "10.1099/mic.0.2008/018135-0",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CAAACGAGCGTTTC",
+    "ncbi_accession": "WP_003091195.1",
+    "alias": "PsrA",
+    "doi": "10.1099/mic.0.2008/018135-0",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CAAACAAACGTTTG",
+    "ncbi_accession": "WP_003091195.1",
+    "alias": "PsrA",
+    "doi": "10.1099/mic.0.2008/018135-0",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CAAACGTTTGTTTG",
+    "ncbi_accession": "WP_003091195.1",
+    "alias": "PsrA",
+    "doi": "10.1099/mic.0.2008/018135-0",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "GAAACGTATGTTTC",
+    "ncbi_accession": "WP_003091195.1",
+    "alias": "PsrA",
+    "doi": "10.1099/mic.0.2008/018135-0",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CAAACGGGCGTATG",
+    "ncbi_accession": "WP_003091195.1",
+    "alias": "PsrA",
+    "doi": "10.1099/mic.0.2008/018135-0",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "GAATCGAGCGTTTG",
+    "ncbi_accession": "WP_003091195.1",
+    "alias": "PsrA",
+    "doi": "10.1099/mic.0.2008/018135-0",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "AAATGTGGTTGATCCAGTCAACTATTTTG",
+    "ncbi_accession": "WP_003092152.1",
+    "alias": "NalD",
+    "doi": "10.1128/jb.01342-06",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "GCGGGAATAAAGTGAACATCTGTTCGCCGGACACTGTG",
+    "ncbi_accession": "WP_003107570.1",
+    "alias": "DesT",
+    "doi": "10.1128/jb.00404-09",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TACATCAGTGAACGCTTGTTGACTCGATTG",
+    "ncbi_accession": "WP_003107570.1",
+    "alias": "DesT",
+    "doi": "10.1111/j.1365-2958.2007.05934.x",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "AGTTTTGTGAACGATCGTTCACTGAAATA",
+    "ncbi_accession": "WP_003107570.1",
+    "alias": "DesT",
+    "doi": "10.1111/j.1365-2958.2007.05934.x",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "GTGAACGATCGTTCAC",
+    "ncbi_accession": "WP_003107570.1",
+    "alias": "DesT",
+    "doi": "10.1093/nar/gkaa1134",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "CACAGTCCGATTTTTATCGGATAT",
+    "ncbi_accession": "WP_003112936.1",
+    "alias": "AguR",
+    "doi": "10.1128/JB.183.22.6517-6524.2001",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CCCGTTTAATCTGGTCAGTTGATGAC",
+    "ncbi_accession": "WP_003113688.1",
+    "alias": "CurR",
+    "doi": "10.1016/j.gene.2024.148754",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CAGTCATCAACTGACCAGATTAAAC",
+    "ncbi_accession": "WP_003113688.1",
+    "alias": "CurR",
+    "doi": "10.1016/j.gene.2024.148754",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TAGACGACTGGTCTA",
+    "ncbi_accession": "WP_003113688.1",
+    "alias": "CurR",
+    "doi": "10.1093/nar/gkaa1134",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "TGGTCATTTAAGAACTGTATCGTACAGTACTGTTTTGGCAA",
+    "ncbi_accession": "WP_003113837.1",
+    "alias": "NalC",
+    "doi": "10.1371/journal.pone.0032684",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TTATTTGTATCGATCACTATAAATTT",
+    "ncbi_accession": "WP_003119828.1",
+    "alias": "CifR",
+    "doi": "10.1093/nar/gkae889",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TTTATCGACCGCTACA",
+    "ncbi_accession": "WP_003119828.1",
+    "alias": "CifR",
+    "doi": "10.1093/nar/gkaa1134",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "AGATAATAGACCAGTCACTATAT",
+    "ncbi_accession": "WP_003227022.1",
+    "alias": "QdoR",
+    "doi": "10.1128/JB.00079-07",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TTAAACAAACGTTTAATCAA",
+    "ncbi_accession": "WP_003229313.1",
+    "alias": "RefZ",
+    "doi": "10.1111/mmi.13217",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "AGATAATAGACCAGTCACTATATTT",
+    "ncbi_accession": "WP_003246449.1",
+    "alias": "LmrA",
+    "doi": "10.1128/jb.186.17.5640-5648.2004",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TACAATTATATAGAACGGTCTAGACAAATGAATGATAATATATAGACTGGTCTAAATTGGAGG",
+    "ncbi_accession": "WP_003246449.1",
+    "alias": "LmrA",
+    "doi": "10.1128/jb.186.17.5640-5648.2004",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "ATTATATAAGTCGCTCTACCATACC",
+    "ncbi_accession": "WP_003246449.1",
+    "alias": "LmrA",
+    "doi": "10.1128/jb.00079-07",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CCACGCTATCAACGTAATGTCGAGGCCGTCAACGAGATGTCGACACTATCGACAC",
+    "ncbi_accession": "WP_003399797.1",
+    "alias": "EthR",
+    "doi": "10.1046/j.1365-2958.2003.03809.x",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TTTGACTAAGCGGGGCGAGCGCTCCGCTTAGCCGAACTATACGGAACGCGCGCCCCGCTTTGTCAAG",
+    "ncbi_accession": "WP_003400591.1",
+    "alias": "OxiR",
+    "doi": "10.1093/femsle/fnz109",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "GCCTGCGCCGCGTCGTCGCGGTGCCTGT",
+    "ncbi_accession": "WP_003401571.1",
+    "alias": "Rv0302",
+    "doi": "10.1002/pro.2802",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TGCCCGGGGCGCGACCACGCCCCGTACCT",
+    "ncbi_accession": "WP_003401571.1",
+    "alias": "Rv0302",
+    "doi": "10.1002/pro.2802",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TTTCTTGGCGGGAACGCCCACTGG",
+    "ncbi_accession": "WP_003401571.1",
+    "alias": "Rv0302",
+    "doi": "10.1002/pro.2802",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CGACGTGCTACTGGCACGTTA",
+    "ncbi_accession": "WP_003407514.1",
+    "alias": "Rv1474c",
+    "doi": "10.1016/j.tube.2017.01.003",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CGACGTGTTGAAGGCACGTAG",
+    "ncbi_accession": "WP_003407514.1",
+    "alias": "Rv1474c",
+    "doi": "10.1016/j.tube.2017.01.003",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TCGGTGATCCACTTGGGGGGGACCATTGACCCTGTTGTCTGC",
+    "ncbi_accession": "WP_003411595.1",
+    "alias": "JTY_2262",
+    "doi": "10.1016/j.biochi.2026.01.013",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TACGTTAGTGACGATTAACCGAAGTGTCCAGCATGAGTCGT",
+    "ncbi_accession": "WP_003412790.1",
+    "alias": "Fad35R",
+    "doi": "10.1111/j.1742-4658.2012.08707.x",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TTGTGTACATTTGTACACAAAGG",
+    "ncbi_accession": "WP_003416005.1",
+    "alias": "Rv3066",
+    "doi": "10.1093/nar/gks677",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TCGGTTATCAGTCGATAACATGGAGGGTATGTTATCAACTGATAACCGA",
+    "ncbi_accession": "WP_003416573.1",
+    "alias": "Rv3160c",
+    "doi": "10.1038/s41598-021-81104-y",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "caaTCGGTTATCAGTcGATAACATggagggtATGTTATCaACTGATAACCGAgcc",
+    "ncbi_accession": "WP_003416573.1",
+    "alias": "Rv3160c",
+    "doi": "10.1038/s41598-021-81104-y",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "TGTAGTCATCTGACTACA",
+    "ncbi_accession": "WP_003417984.1",
+    "alias": "Rv3405c",
+    "doi": "10.1016/j.bbrc.2018.01.152",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TACATACGTGGTTGTATGTAA",
+    "ncbi_accession": "WP_003693763.1",
+    "alias": "MtrR",
+    "doi": "10.1093/nar/gkab213",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CAGAACGCTTGTACTGTTA",
+    "ncbi_accession": "WP_003856101.1",
+    "alias": "AcnR",
+    "doi": "10.1074/jbc.M408271200",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "gtacatTTACAAGCAGACTGCCGGTAActtacc",
+    "ncbi_accession": "WP_003899803.1",
+    "alias": "Rv0078",
+    "doi": "10.1128/mBio.00989-18",
+    "source": [
+      "snowprint"
+    ]
+  },
+  {
+    "sequence": "TGCCGCTAATTATGGAAACACCTGTATCCTGATATTGGCCGG",
+    "ncbi_accession": "WP_003899886.1",
+    "alias": "InbR",
+    "doi": "10.1038/srep13969",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "GTTAGCGGTCGTTAAC",
+    "ncbi_accession": "WP_003948165.1",
+    "alias": "BkdR",
+    "doi": "10.1128/aem.00838-24",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "GTTAACGGTCATTAAC",
+    "ncbi_accession": "WP_003948165.1",
+    "alias": "BkdR",
+    "doi": "10.1128/aem.00838-24",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TTGCGCAGTGGGCAA",
+    "ncbi_accession": "WP_003969541.1",
+    "alias": "SGR_5269",
+    "doi": "10.1093/nar/gkaa1134",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "GTCCGGGCCAGCCCGGCC",
+    "ncbi_accession": "WP_003973613.1",
+    "alias": "sco5384",
+    "doi": "10.1128/aem.01822-22",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "TGCACATCGGAACGATCGATTCCGTT",
+    "ncbi_accession": "WP_003973710.1",
+    "alias": "AtrA",
+    "doi": "10.1111/mmi.13004",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "ACTACTACGTACGCTGTA",
+    "ncbi_accession": "WP_003977108.1",
+    "alias": "sco1718",
+    "doi": "10.1128/aem.01822-22",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "ACCGGACAACTGTCCATT",
+    "ncbi_accession": "WP_003977696.1",
+    "alias": "XdhR",
+    "doi": "10.1111/mmi.13342",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "AACGGACAGTTGTCCGCT",
+    "ncbi_accession": "WP_003977696.1",
+    "alias": "XdhR",
+    "doi": "10.1111/mmi.13342",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CTTAACGCATGGCATGTGCGTTATG",
+    "ncbi_accession": "WP_005058758.1",
+    "alias": "MAB_2299c",
+    "doi": "10.1128/AAC.01000-19",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "CATACGCAGTGCATGATTATTT",
+    "ncbi_accession": "WP_005407901.1",
+    "alias": "DitR",
+    "doi": "10.1371/journal.pone.0272388",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CATACGACGCGTATGAATGTAG",
+    "ncbi_accession": "WP_005407901.1",
+    "alias": "DitR",
+    "doi": "10.1371/journal.pone.0272388",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "GTTTACAAACAACCGCGAATGTAAGTAT",
+    "ncbi_accession": "WP_005768695.1",
+    "alias": "PmeR",
+    "doi": "10.1094/MPMI-03-11-0077",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "gtcgTCTTGACCGCGCGTCAATA",
+    "ncbi_accession": "WP_006969242.1",
+    "alias": "PPSIR1_21979",
+    "doi": "10.1093/nar/gkaa1134",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "CACCGGTCGGTATA",
+    "ncbi_accession": "WP_009942615.1",
+    "alias": "SACE_1906",
+    "doi": "10.1016/j.synbio.2026.01.016",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CTTGATCCTTCCTATATTGT",
+    "ncbi_accession": "WP_009944749.1",
+    "alias": "AcrT",
+    "doi": "10.1128/mBio.02298-21",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "gtaCTGAAACgactGTTTCAGga",
+    "ncbi_accession": "WP_009946947.1",
+    "alias": "SACE_0303",
+    "doi": "10.3389/fbioe.2021.692901",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "GGCGTCACATCCCGGTTGACGCTGCT",
+    "ncbi_accession": "WP_009949582.1",
+    "alias": "PccD",
+    "doi": "10.1128/jb.00281-17",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CTGAAACGTATGTTTCAA",
+    "ncbi_accession": "WP_010953132.1",
+    "alias": "PP_2144",
+    "doi": "10.1093/nar/gkaa1134",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "TAGATTTCACTTGACATCTA",
+    "ncbi_accession": "WP_010973650.1",
+    "alias": "NieR",
+    "doi": "10.1016/j.micres.2021.126816",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TAGATTTAGGATGCAATCTA",
+    "ncbi_accession": "WP_010973650.1",
+    "alias": "NieR",
+    "doi": "10.1016/j.micres.2021.126816",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "ACCCACGACACGTACGAAACGGTTTCGTTTCGCTC",
+    "ncbi_accession": "WP_010985050.1",
+    "alias": "AveT",
+    "doi": "10.1128/AEM.00868-15",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CTCGGGCGGTCAATCCGCCCGAGCGTTTC",
+    "ncbi_accession": "WP_010985133.1",
+    "alias": "AvaR2",
+    "doi": "10.1111/mmi.13479",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CGCACCGCCATACCGGTCACCCGGTAT",
+    "ncbi_accession": "WP_010985133.1",
+    "alias": "AvaR2",
+    "doi": "10.1111/mmi.13479",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "GGGCGCCACAACAAACCGCTATGCTGGTTTC",
+    "ncbi_accession": "WP_010985133.1",
+    "alias": "AvaR2",
+    "doi": "10.1111/mmi.13479",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CAGCGGGAAAAGACCAAG",
+    "ncbi_accession": "WP_010985133.1",
+    "alias": "AvaR2",
+    "doi": "10.1111/mmi.13479",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "GATAAAACCAGCTGAACGGTTTTTCA",
+    "ncbi_accession": "WP_010985133.1",
+    "alias": "AvaR2",
+    "doi": "10.1111/mmi.13479",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "AAGACAAAACCGTCTAGTACGTATCTTTGA",
+    "ncbi_accession": "WP_010985133.1",
+    "alias": "AvaR2",
+    "doi": "10.1111/mmi.13479",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TGCGCGAGAAAACCGCACAAGCGGTTTGTT",
+    "ncbi_accession": "WP_010985133.1",
+    "alias": "AvaR2",
+    "doi": "10.1111/mmi.13479",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "GTTAATGAGCGTTAAC",
+    "ncbi_accession": "WP_010986683.1",
+    "alias": "AccR",
+    "doi": "10.1128/AEM.00508-20",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "GTTAACGACCGCTAAC",
+    "ncbi_accession": "WP_010986683.1",
+    "alias": "AccR",
+    "doi": "10.1128/AEM.00508-20",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "accaGTTAAtGagCgTTAACgcat",
+    "ncbi_accession": "WP_010986683.1",
+    "alias": "AccR",
+    "doi": "10.1128/AEM.00508-20",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "AAAATCTGAACCCTTGTTCATTTATGAAT",
+    "ncbi_accession": "WP_011014162.1",
+    "alias": "RolR",
+    "doi": "10.1128/AEM.01304-12",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TAACTGTACCGACCATTCGTTACAGTTACGAT",
+    "ncbi_accession": "WP_011015249.1",
+    "alias": "CgmR",
+    "doi": "10.1074/jbc.m505999200",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TTAGACAGATCGGTCTAA",
+    "ncbi_accession": "WP_011015509.1",
+    "alias": "McbR",
+    "doi": "10.1111/j.1365-2958.2005.04586.x",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TTGAACAGAACTGTCTAA",
+    "ncbi_accession": "WP_011015509.1",
+    "alias": "McbR",
+    "doi": "10.1111/j.1365-2958.2005.04586.x",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TTAGACAGCTTGGTCTAA",
+    "ncbi_accession": "WP_011015509.1",
+    "alias": "McbR",
+    "doi": "10.1111/j.1365-2958.2005.04586.x",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "AATGGCAGATTCTGCCACAG",
+    "ncbi_accession": "WP_011028825.1",
+    "alias": "SCO3201",
+    "doi": "10.1128/AEM.00819-10",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "CAACTAACTGGTTGGTTG",
+    "ncbi_accession": "WP_011029378.1",
+    "alias": "SCO4008",
+    "doi": "10.1016/j.jmb.2013.06.013",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CAACCAAATAGTTGGTTA",
+    "ncbi_accession": "WP_011029378.1",
+    "alias": "SCO4008",
+    "doi": "10.1016/j.jmb.2013.06.013",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "AGCGCTGTACAGCGTATGGGAATCTCTTGTACGGTGTACGAGTATC",
+    "ncbi_accession": "WP_011029392.1",
+    "alias": "Pip",
+    "doi": "10.1111/j.1365-2958.1995.mmi_17061109.x",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CGTACACCGTACAAGGAGCC",
+    "ncbi_accession": "WP_011029392.1",
+    "alias": "Pip",
+    "doi": "10.1111/j.1365-2958.1995.mmi_17061109.x",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "GAGTACGGCGTACGC",
+    "ncbi_accession": "WP_011029601.1",
+    "alias": "sco4358",
+    "doi": "10.1128/aem.01822-22",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "ACGCGACCACCGTTCCAC",
+    "ncbi_accession": "WP_011030045.1",
+    "alias": "ActR",
+    "doi": "10.1128/JB.00717-07",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "GAACGGTGGCCGTTC",
+    "ncbi_accession": "WP_011030045.1",
+    "alias": "ActR",
+    "doi": "10.1093/nar/gkaa1134",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "AAAAAACCGCTCAGTCTGTATCTTAACGTTCGC",
+    "ncbi_accession": "WP_011030795.1",
+    "alias": "ScbR2",
+    "doi": "10.1111/j.1365-2958.2011.07811.x",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "AAACAGACTGTGTTAGCTGTTTCAGT",
+    "ncbi_accession": "WP_011030795.1",
+    "alias": "ScbR2",
+    "doi": "10.1111/j.1365-2958.2011.07811.x",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TGGAACGtCGTTCCA",
+    "ncbi_accession": "WP_011031522.1",
+    "alias": "SCO7222",
+    "doi": "10.1093/nar/gkaa1134",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "CGAACttGTTCG",
+    "ncbi_accession": "WP_011031841.1",
+    "alias": "SCO7704",
+    "doi": "10.1093/nar/gkaa1134",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "CTGCGTGCCCGCAAACTTGCGCGTACGTAAATATGCGTAAGCGCAAACTTGCGTGCACGCAC",
+    "ncbi_accession": "WP_011031854.1",
+    "alias": "KijR",
+    "doi": "10.1016/j.chembiol.2012.11.011",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TCAAACAAGTGTTTGTCAGG",
+    "ncbi_accession": "WP_011060270.1",
+    "alias": "psrA",
+    "doi": "10.1093/nar/gkaa1134",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "TAAGTTAAATTCAAATTTGACTTTTGTTTA",
+    "ncbi_accession": "WP_011064124.1",
+    "alias": "PhlH",
+    "doi": "10.1128/aem.01743-23",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TAGTTCTAATTCAAATTTGACTTTTTATTT",
+    "ncbi_accession": "WP_011064124.1",
+    "alias": "PhlH",
+    "doi": "10.1128/AEM.01419-17",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TAAATAAACTATACCGTATATTTTTCTTTTTGT",
+    "ncbi_accession": "WP_011089760.1",
+    "alias": "BdtR",
+    "doi": "10.1094/MPMI-08-20-0243-R",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "gattAAATAAACTATACCGTATATTTTCTTTttgtt",
+    "ncbi_accession": "WP_011089760.1",
+    "alias": "BdtR",
+    "doi": "10.1094/MPMI-08-20-0243-R",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "TGGGGTTATACTTTGACTGAGTATAAGGAGG",
+    "ncbi_accession": "WP_011227711.1",
+    "alias": "TtFadR",
+    "doi": "10.1099/mic.0.048017-0",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CGAACGGCCGTTAG",
+    "ncbi_accession": "WP_011228340.1",
+    "alias": "PaaR",
+    "doi": "10.1128/JB.05203-11",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CAAACGACCGTTAG",
+    "ncbi_accession": "WP_011228340.1",
+    "alias": "PaaR",
+    "doi": "10.1128/JB.05203-11",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "AATGTAAACTCATAAGTTTACTTT",
+    "ncbi_accession": "WP_011263239.1",
+    "alias": "VFA0359",
+    "doi": "10.1038/s41587-020-0468-5",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CTTGATTTAATAGACCATACCGTCTATTATTTCTGGATG",
+    "ncbi_accession": "WP_011336736.1",
+    "alias": "AcuR",
+    "doi": "10.1371/journal.pone.0015972",
+    "source": [
+      "groovDB",
+      "snowprint"
+    ]
+  },
+  {
+    "sequence": "ACCTACCGGTCGGTAGGT",
+    "ncbi_accession": "WP_011554266.1",
+    "alias": "AibR",
+    "doi": "10.1093/nar/gkw1238",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CCTACCGttCGGTAGG",
+    "ncbi_accession": "WP_011554266.1",
+    "alias": "AibR",
+    "doi": "10.1093/nar/gkaa1134",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "GAGAACGATGGTTCTC",
+    "ncbi_accession": "WP_011731153.1",
+    "alias": "Ms6244",
+    "doi": "10.1002/1873-3468.14582",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "AACTTACTTGAGAGTAAGAA",
+    "ncbi_accession": "WP_012392470.1",
+    "alias": "FdmR",
+    "doi": "10.1073/pnas.2019305118",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "GTGTTACTGGTGGGTAACTT",
+    "ncbi_accession": "WP_012392470.1",
+    "alias": "FdmR",
+    "doi": "10.1073/pnas.2019305118",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TCGTTACTGGCGGGTAGCTT",
+    "ncbi_accession": "WP_012392470.1",
+    "alias": "FdmR",
+    "doi": "10.1073/pnas.2019305118",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "GTGTTACTCATAGGTAACCT",
+    "ncbi_accession": "WP_012392470.1",
+    "alias": "FdmR",
+    "doi": "10.1073/pnas.2019305118",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CAGTTACCCGTAGGTAACCT",
+    "ncbi_accession": "WP_012392470.1",
+    "alias": "FdmR",
+    "doi": "10.1073/pnas.2019305118",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "ATCTTACTCCGGAGTAAGAT",
+    "ncbi_accession": "WP_012392470.1",
+    "alias": "FdmR",
+    "doi": "10.1073/pnas.2019305118",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TTGCTACTGTCCAGTAACAT",
+    "ncbi_accession": "WP_012392470.1",
+    "alias": "FdmR",
+    "doi": "10.1073/pnas.2019305118",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "GAACTATACAGGACATCCTGTATAGTTATGATC",
+    "ncbi_accession": "WP_012480398.1",
+    "alias": "MfsR",
+    "doi": "10.1093/femsle/fnab098",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "ATGAACTGACCATTTCAT",
+    "ncbi_accession": "WP_012689714.1",
+    "alias": "ROP_25110",
+    "doi": "10.1093/nar/gkaa1134",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "CGGAATGAACGTTCATTCCG",
+    "ncbi_accession": "WP_013083972.1",
+    "alias": "Bm3R1",
+    "doi": "10.1016/S0021-9258(18)53872-2",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TTCTTATACACCATATAAGGGTCGGT",
+    "ncbi_accession": "WP_013222564.1",
+    "alias": "RifQ",
+    "doi": "10.1186/s12934-018-0863-5",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TTGGACACGTGTCCAACTT",
+    "ncbi_accession": "WP_013366341.1",
+    "alias": "EilR",
+    "doi": "10.1038/s41467-018-05857-3",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "AATACATACGTATGTATT",
+    "ncbi_accession": "WP_014469484.1",
+    "alias": "BAK71752",
+    "doi": "10.1038/s42003-024-05849-8",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TACTTACATTCATGGTTGTTTGTAAATA",
+    "ncbi_accession": "WP_014859138.1",
+    "alias": "TtgR",
+    "doi": "10.1128/AAC.47.10.3067-3072.2003",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "TCCTAGCATTGGCTTGACAGCCTGTCTGGTGAAAGACATGCTGTCCGACGAAAGCGCGAAGACAGGCTGTCCGGCGAAATCGCC",
+    "ncbi_accession": "WP_015037182.1",
+    "alias": "JadR",
+    "doi": "10.1111/mmi.12406",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "ACAAGGACAAGTGTCCATGTCAGGGACAA",
+    "ncbi_accession": "WP_016359483.1",
+    "alias": "HdnoR",
+    "doi": "10.1111/j.1365-2958.1992.tb01353.x",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "ACATGGACAGCTGTCCATGTATCAATAGG",
+    "ncbi_accession": "WP_016359483.1",
+    "alias": "HdnoR",
+    "doi": "10.1111/j.1365-2958.1992.tb01353.x",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "AATAACAGTACCAATAGTATCGAAAGT",
+    "ncbi_accession": "WP_021690437.1",
+    "alias": "EdcR",
+    "doi": "10.3390/genes12121846",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CAAAAACAATTATATGGCTGTACATATAGTTGTCAACTCAAAA",
+    "ncbi_accession": "WP_024087624.1",
+    "alias": "NicR2",
+    "doi": "10.1111/mmi.12533",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "ACTTGTACATCGTATAACTCTCATATACGTTGTAGAACA",
+    "ncbi_accession": "WP_033220308.1",
+    "alias": "VarR",
+    "doi": "10.1128/jb.183.6.2025-2031.2001",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TTTATTGGCTAGTCAGTTAA",
+    "ncbi_accession": "WP_035269502.1",
+    "alias": "HpaR",
+    "doi": "10.1128/aem.02390-21",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TTTATTAGTTAGTCAATTAA",
+    "ncbi_accession": "WP_035269502.1",
+    "alias": "HpaR",
+    "doi": "10.1128/aem.02390-21",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TTGACACATACCAGCCAGCCGGTATATGGTAGCCG",
+    "ncbi_accession": "WP_050417930.1",
+    "alias": "MbdR",
+    "doi": "10.1074/jbc.M115.637074",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "TGCTGTTAGATACTGGGCAGCTGGTATGTTGTGC",
+    "ncbi_accession": "WP_050417930.1",
+    "alias": "MbdR",
+    "doi": "10.1074/jbc.M115.637074",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "ACCGAGTAAATTATTTAACTCGGT",
+    "ncbi_accession": "WP_067435216.1",
+    "alias": "SLCG_2919",
+    "doi": "10.1128/AEM.02091-18",
+    "source": "snowprint"
+  },
+  {
+    "sequence": "CGCGTACTCGTA",
+    "ncbi_accession": "WP_079164880.1",
+    "alias": "AbrT",
+    "doi": "10.1186/s12934-024-02498-8",
+    "source": "groovDB"
+  },
+  {
+    "sequence": "CGTACGATAGCT",
+    "ncbi_accession": "WP_079164880.1",
+    "alias": "AbrT",
+    "doi": "10.1186/s12934-024-02498-8",
+    "source": "groovDB"
+  }
+]
