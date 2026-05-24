@@ -249,16 +249,6 @@ def combined_v1(seq: str) -> float:
     )
 
 
-def combined_v2(seq: str) -> float:
-    """All-AT-themed scorer — keep only the features that correspond to
-    'operator looks AT-rich and short'. Tests whether GC penalty + length
-    alone separate the classes."""
-    return (
-        1.0 * at_content(seq)
-        + 0.3 * length_preference(seq)
-    )
-
-
 def combined_v3(seq: str) -> float:
     """AT content + core-vs-flank + CG penalty. Drops length and palindrome
     strength to see whether shape-only features carry the signal."""
@@ -267,6 +257,42 @@ def combined_v3(seq: str) -> float:
         + 0.7 * core_vs_flank_at(seq)
         + 0.5 * cg_dinucleotide_penalty(seq)
     )
+
+
+# --- GC-penalty gradient (used by operator_fetch v1.x ablation matrix) ----
+#
+# Three increasingly aggressive variants of the AT-content / GC-penalty
+# preference, ordered weak → medium_weak → strong. `gc_strong` is the
+# scorer the first cut of operator_fetch v1 used (originally named
+# `combined_v2` in PR #14). The weaker variants test whether less-
+# aggressive AT preference avoids regressions on GC-rich-genome operators
+# (Streptomyces, Mycobacterium, etc.) where the real operator isn't AT-rich.
+#
+# Both at_content and length_preference return values in [0, 1], so the
+# coefficients describe the relative weighting directly.
+
+def gc_weak(seq: str) -> float:
+    """Light AT bias — length dominates; AT acts mostly as tiebreaker."""
+    return 0.2 * at_content(seq) + 0.5 * length_preference(seq)
+
+
+def gc_medium_weak(seq: str) -> float:
+    """Moderate AT bias — AT and length contribute roughly equally."""
+    return 0.5 * at_content(seq) + 0.3 * length_preference(seq)
+
+
+def gc_strong(seq: str) -> float:
+    """Strong AT bias — AT dominates. Equivalent to the old `combined_v2`
+    from PR #14 that drove the first cut of operator_fetch v1. May over-
+    apply on GC-rich-genome hosts."""
+    return 1.0 * at_content(seq) + 0.3 * length_preference(seq)
+
+
+# Backward-compatibility alias — `combined_v2` was the name PR #14's
+# score-classifier benchmark + the first operator_fetch v1 used. Keep
+# resolvable so existing benchmark JSON / docs still load, but prefer
+# `gc_strong` going forward.
+combined_v2 = gc_strong
 
 
 # --- Registries ----------------------------------------------------------
@@ -295,8 +321,13 @@ SCORERS: list[tuple[str, Callable[[str], float], str]] = [
      "Spacer-length term from legacy scoring (favours 0-7 bp spacers)"),
     ("combined_v1",                      combined_v1,
      "Weighted combo: AT, core-vs-flank, length, -palindrome, -CG"),
-    ("combined_v2",                      combined_v2,
-     "AT + length only (minimal combo)"),
     ("combined_v3",                      combined_v3,
      "AT + core-vs-flank + CG penalty (shape-only)"),
+    ("gc_weak",                          gc_weak,
+     "Light AT bias (0.2 · AT + 0.5 · length) — GC-penalty gradient: weak"),
+    ("gc_medium_weak",                   gc_medium_weak,
+     "Moderate AT bias (0.5 · AT + 0.3 · length) — GC-penalty gradient: medium-weak"),
+    ("gc_strong",                        gc_strong,
+     "Strong AT bias (1.0 · AT + 0.3 · length) — GC-penalty gradient: strong "
+     "(was `combined_v2` in PR #14)"),
 ]
