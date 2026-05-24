@@ -160,41 +160,14 @@ VERSIONS: dict[str, dict] = {
         "description": ("Widened pool + 0.8·AT + 0.3·length. Between V2.6 "
                          "and V2.7, closer to strong."),
     },
-
-    # --- V3.x: combined promoter v1 + operator v1 ablation ----------------
-    # Mirror the V2.5/V2.6/V2.7 axis on the V1-promoter side. The
-    # question: does multi-candidate promoter_fetch (which lost on its own
-    # in the earlier V1 benchmark, because V0's operator selector picked
-    # spurious GC palindromes from the wider promoter pool) actually help
-    # once paired with the better V2.6-style selector?
-
-    "v3.5": {
-        "operon_fetch":   operon_fetch.v0.fetch,
-        "promoter_fetch": promoter_fetch.v1.fetch,
-        "operator_fetch": _bind_operator_v1("widened", "gc_weak"),
-        "description": ("V1 multi-candidate promoter + widened operator pool + "
-                         "WEAK GC penalty (0.2·AT + 0.5·length). "
-                         "Combined ablation, weak end."),
-    },
-    "v3.6": {
-        "operon_fetch":   operon_fetch.v0.fetch,
-        "promoter_fetch": promoter_fetch.v1.fetch,
-        "operator_fetch": _bind_operator_v1("widened", "gc_medium_weak"),
-        "description": ("V1 multi-candidate promoter + widened operator pool + "
-                         "MEDIUM-WEAK GC penalty (0.5·AT + 0.3·length). "
-                         "Combined version using the V2.6 selector — the "
-                         "peak from the operator-only sweep. Most likely "
-                         "to beat V2.6 if promoter v1 contributes anything."),
-    },
-    "v3.7": {
-        "operon_fetch":   operon_fetch.v0.fetch,
-        "promoter_fetch": promoter_fetch.v1.fetch,
-        "operator_fetch": _bind_operator_v1("widened", "gc_strong"),
-        "description": ("V1 multi-candidate promoter + widened operator pool + "
-                         "STRONG GC penalty (1.0·AT + 0.3·length). "
-                         "Combined version using the V2.7 selector."),
-    },
 }
+
+# Combined V3.x bundles (V1 multi-candidate promoter + V2.x operator) were
+# benchmarked and removed. V3.6 was a strict-but-tiny improvement over V2.6
+# (3 wins / 0 losses / 132 within ±1pp; mean +0.1pp); the per-query NCBI
+# overhead for alternative promoter candidates wasn't worth the marginal
+# accuracy gain. V2.6 chosen as the production-ready peak. See the
+# operator-fetch-ablation PR thread for the supporting benchmark.
 
 
 def list_versions() -> list[str]:
