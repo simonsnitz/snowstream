@@ -33,6 +33,26 @@ VERSIONS: dict[str, dict] = {
                          "the highest consensus_score. By construction "
                          "this can never regress V0."),
     },
+    "v2": {
+        "operon_fetch":   operon_fetch.v0.fetch,
+        "promoter_fetch": promoter_fetch.v0.fetch,
+        "operator_fetch": operator_fetch.v1.fetch,
+        "description": ("V0 + widened operator candidate enumeration + "
+                         "re-rank by `combined_v2` (AT% + length-Gaussian). "
+                         "Keeps the legacy palindrome finder as the "
+                         "candidate generator (top-K unique by IR score "
+                         "instead of just max-tied), but picks the winner "
+                         "using the AT-rich, operator-sized scorer that "
+                         "had AUC 0.916 on the positives/negatives set in "
+                         "algorithms/benchmark/LATEST_SCORERS.md."),
+    },
+    "v3": {
+        "operon_fetch":   operon_fetch.v0.fetch,
+        "promoter_fetch": promoter_fetch.v1.fetch,
+        "operator_fetch": operator_fetch.v1.fetch,
+        "description": ("V0 + both V1 promoter enumeration and V2 "
+                         "operator re-ranking — the combined improvement."),
+    },
 }
 
 

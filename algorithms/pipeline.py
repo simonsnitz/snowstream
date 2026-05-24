@@ -38,22 +38,34 @@ def _normalise_promoter(out) -> list[str]:
     raise TypeError(f"promoter_fetch returned unexpected type: {type(out)}")
 
 
+def _operon_data(homolog: dict) -> dict:
+    """Build the operon_data dict promoter_fetch expects. Passes the
+    snowstream-cached promoter (if any) through as `cached_promoter` so
+    V0/V1 can short-circuit the NCBI eFetch when the precomputed value
+    is already available — saves ~100 HTTP round-trips per protein."""
+    return {
+        "operon": homolog.get("operon") or [],
+        "protein_index": homolog.get("protein_index"),
+        "genome": homolog.get("genome"),
+        "cached_promoter": homolog.get("promoter"),
+    }
+
+
 def _promoter_for(homolog: dict, promoter_fetch_fn, params: dict) -> Optional[str]:
     """Resolve a single promoter for a non-query homolog. If the version's
     promoter_fetch returns multiple candidates, pick the V0 primary (the
     most legacy-faithful choice) so we don't combinatorially explode the
     search space."""
-    operon_data = {
-        "operon": homolog.get("operon") or [],
-        "protein_index": homolog.get("protein_index"),
-        "genome": homolog.get("genome"),
-    }
+    operon_data = _operon_data(homolog)
     if not operon_data["operon"] or operon_data["protein_index"] is None:
-        return None
+        # Even without an operon, if snowstream has a cached promoter
+        # we can use it (the smart-lookup record may be valid even when
+        # this benchmark-side reconstruction lacks fields).
+        cached = operon_data.get("cached_promoter")
+        return cached if cached else None
     primaries = _normalise_promoter(promoter_fetch_fn(operon_data, params))
     if primaries:
         return primaries[0]
-    # If the version's fetch returned nothing, fall back to V0 explicitly
     legacy = promoter_v0.fetch(operon_data, params)
     return legacy if isinstance(legacy, str) and legacy else None
 
@@ -87,12 +99,8 @@ def run(version: dict, homologs: list[dict], params: dict) -> dict:
     query = homologs[0]
     others = homologs[1:]
 
-    # 1. Resolve query's candidate promoters
-    query_operon = {
-        "operon": query.get("operon") or [],
-        "protein_index": query.get("protein_index"),
-        "genome": query.get("genome"),
-    }
+    # 1. Resolve query's candidate promoters (uses cached_promoter shortcut)
+    query_operon = _operon_data(query)
     query_candidates = _normalise_promoter(promoter_fetch_fn(query_operon, params))
 
     # 2. Resolve a single promoter for each other homolog (no combinatorial
