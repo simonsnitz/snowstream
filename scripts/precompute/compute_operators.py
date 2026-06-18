@@ -3,9 +3,10 @@
 For each cluster centroid that has a populated promoter, runs the V2.6
 operator_fetch (widened candidate pool + AT-based selector at gc_medium_weak
 strength) using the cluster's members as the homolog set. Appends a new
-JSONL record with all original fields preserved plus the operator data,
-following the operon_retry / promoter_retry pattern. The byte-offset
-index in backend/families.py automatically prefers the new record.
+JSONL record with all original fields preserved plus a nested
+`operator_v26` object containing every operator-related field, so the
+algorithm version is in the *key name itself* — future versions add an
+`operator_v27` object side-by-side without renaming anything.
 
 Why per-centroid (not per-member):
   Smart-lookup returns the matched protein's record at query time. For
@@ -15,25 +16,33 @@ Why per-centroid (not per-member):
   smart-lookup hits on non-centroids also return a precomputed operator.
 
 What gets stored, per centroid:
-  * operator_fetch_version       — "v2.6"
-  * operator_motif               — consensus motif sequence string (e.g.
-                                   "ataatAAACGGAGAGTTATCCGTTTgtcaa")
-  * operator_native_for_centroid — the operator extracted from the centroid's
-                                   own promoter (lowercase flanks + uppercase
-                                   core, same as v0 output)
-  * operator_consensus_score     — V0's selection metric, kept for reference
-  * operator_rerank_score        — V2.6's selection metric (gc_medium_weak)
-  * operator_rerank_scorer       — "gc_medium_weak"
-  * operator_n_homologs_used     — count of cluster members that contributed
-                                   a valid alignment (subset of the
-                                   homolog list — some align below cutoff)
-  * operator_n_candidates_eval'd — count of palindrome candidates that
-                                   produced a non-empty consensus
-  * operator_computed_at         — ISO timestamp
-  * source                       — "compute_operators_v2.6"
 
-Skip behaviour: centroids whose latest JSONL record already has
-operator_fetch_version=="v2.6" are skipped, so re-running is idempotent.
+  operator_v26 = {
+    "version":              "v2.6",
+    "algorithm":            "operator_fetch.v1 (widened + gc_medium_weak)",
+    "candidate_strategy":   "widened",
+    "rerank_scorer":        "gc_medium_weak",
+    "motif":                consensus motif string (e.g.
+                              "ataatAAACGGAGAGTTATCCGTTTgtcaa"),
+    "native_for_centroid":  the operator extracted from the centroid's
+                              own promoter (lowercase flanks + uppercase
+                              core, same shape as v0 output),
+    "consensus_score":      V0's selection metric, retained as secondary,
+    "rerank_score":         V2.6's selection metric,
+    "n_homologs_used":      count of cluster members that contributed a
+                              valid alignment,
+    "n_candidates_evaluated": count of palindrome candidates evaluated,
+    "computed_at":          ISO timestamp,
+  }
+
+Plus top-level `source = "compute_operators_v2.6"`.
+
+Skip behaviour: centroids whose latest JSONL record already has a non-null
+`operator_v26` object are skipped, so re-running is idempotent. Records
+written by an earlier version of this stage that stored flat
+`operator_fetch_version` / `operator_motif` / etc. fields are *also*
+treated as done, so a one-shot migration can run them through the new
+shape without colliding.
 """
 
 from __future__ import annotations
@@ -79,6 +88,8 @@ _V26_PARAMS = {
 }
 
 _VERSION = "v2.6"
+_ALGORITHM_LABEL = "operator_fetch.v1 (widened + gc_medium_weak)"
+_OPERATOR_KEY = "operator_v26"
 _SOURCE = "compute_operators_v2.6"
 
 # Cap homologs per centroid so very-large clusters don't blow up runtime.
@@ -98,6 +109,19 @@ def _render_motif(motif) -> Optional[str]:
         except Exception:
             return None
     return None
+
+
+def _has_v26_operator(rec: dict) -> bool:
+    """True iff the record already carries V2.6 operator data — either in
+    the new nested `operator_v26` shape, OR the legacy flat
+    `operator_fetch_version == "v2.6"` shape from the very first cut of
+    this stage. Both count as 'already done' for resume / idempotency."""
+    op = rec.get(_OPERATOR_KEY)
+    if isinstance(op, dict) and op.get("version") == _VERSION:
+        return True
+    if rec.get("operator_fetch_version") == _VERSION:
+        return True
+    return False
 
 
 def _load_latest_records(jsonl_path: Path) -> dict[str, dict]:
@@ -144,35 +168,49 @@ def _build_homolog_input(centroid: str, cluster_members: list[dict],
     return out
 
 
-def _operator_record(centroid_rec: dict, result: dict) -> dict:
-    """Build the augmented JSONL record: all original fields + operator
-    fields + new source/timestamp. `centroid_rec` is the latest existing
-    record for this centroid in the JSONL (so operon/promoter/etc. carry
-    through unchanged)."""
-    motif_str = _render_motif(result.get("motif"))
+def _build_operator_v26_block(result: dict) -> dict:
+    """Build the nested `operator_v26` payload from a V2.6 fetch result."""
     rerank_score = result.get("rerank_score")
     if rerank_score in (None, float("-inf")):
         rerank_score = None
+    return {
+        "version": _VERSION,
+        "algorithm": _ALGORITHM_LABEL,
+        "candidate_strategy": _V26_PARAMS["candidate_strategy"],
+        "rerank_scorer": _V26_PARAMS["rerank_scorer"],
+        "motif": _render_motif(result.get("motif")),
+        "native_for_centroid": result.get("native_operator"),
+        "consensus_score": result.get("consensus_score"),
+        "rerank_score": rerank_score,
+        "n_homologs_used": result.get("num_seqs"),
+        "n_candidates_evaluated": result.get("n_candidates_evaluated"),
+        "computed_at": datetime.now(timezone.utc).isoformat(),
+    }
 
-    out = {
-        # Preserve everything from the original record (operon, promoter,
-        # protein_index, genome, etc.). Override only `source` and
-        # `computed_at`, and add the new operator_* fields.
+
+def _operator_record(centroid_rec: dict, result: dict) -> dict:
+    """Build the augmented JSONL record: all original fields preserved
+    (operon, promoter, protein_index, genome, etc.) + the nested
+    `operator_v26` block + new source / computed_at."""
+    return {
         **{k: v for k, v in centroid_rec.items()
-            if k not in ("source", "computed_at")},
+            if k not in ("source", "computed_at", _OPERATOR_KEY,
+                          # Also strip the legacy flat operator_* fields if
+                          # any are present — they're superseded by the
+                          # nested block.
+                          "operator_fetch_version",
+                          "operator_motif",
+                          "operator_native_for_centroid",
+                          "operator_consensus_score",
+                          "operator_rerank_score",
+                          "operator_rerank_scorer",
+                          "operator_n_homologs_used",
+                          "operator_n_candidates_evaluated",
+                          "operator_computed_at")},
         "source": _SOURCE,
         "computed_at": datetime.now(timezone.utc).isoformat(),
-        "operator_fetch_version": _VERSION,
-        "operator_motif": motif_str,
-        "operator_native_for_centroid": result.get("native_operator"),
-        "operator_consensus_score": result.get("consensus_score"),
-        "operator_rerank_score": rerank_score,
-        "operator_rerank_scorer": result.get("rerank_scorer"),
-        "operator_n_homologs_used": result.get("num_seqs"),
-        "operator_n_candidates_evaluated": result.get("n_candidates_evaluated"),
-        "operator_computed_at": datetime.now(timezone.utc).isoformat(),
+        _OPERATOR_KEY: _build_operator_v26_block(result),
     }
-    return out
 
 
 def find_candidates(
@@ -182,7 +220,8 @@ def find_candidates(
     """Return:
       * list of cluster centroid uniprot_ids that need operator computation
         (centroid has a promoter, and its latest record doesn't already
-        carry operator_fetch_version == v2.6)
+        carry a V2.6 operator — either nested `operator_v26` or legacy
+        flat shape)
       * mapping uniprot_id → latest_record  (for building homolog inputs)
       * mapping centroid_uid → cluster_member_list
     """
@@ -198,8 +237,8 @@ def find_candidates(
         rec = records.get(centroid)
         if not rec or not rec.get("promoter"):
             continue
-        if rec.get("operator_fetch_version") == _VERSION:
-            continue  # already done — resume support
+        if _has_v26_operator(rec):
+            continue
         candidates.append(centroid)
     return candidates, records, cluster_homologs
 
@@ -211,8 +250,9 @@ def compute_operators(
     max_records: Optional[int] = None,
     on_progress: Optional[Callable[[int, int, int], None]] = None,
 ) -> int:
-    """For each pending centroid, run V2.6 and append a new JSONL record.
-    Returns the count of records appended. Idempotent on re-run."""
+    """For each pending centroid, run V2.6 and append a new JSONL record
+    with the nested `operator_v26` block. Returns the count of records
+    appended. Idempotent on re-run."""
     log.info("scanning %s for centroids needing operator computation",
               jsonl_path)
     candidates, records, cluster_homologs = find_candidates(
@@ -270,4 +310,69 @@ def compute_operators(
 
     log.info("appended %d / %d centroids (%d with non-empty consensus)",
              appended, total, successes)
+    return appended
+
+
+# --- Migration: legacy flat-shape → nested operator_v26 -----------------
+
+def migrate_legacy_records(jsonl_path: Path) -> int:
+    """One-shot migration for records written by the first cut of this
+    stage (when fields were flat `operator_fetch_version` / `operator_motif`
+    / etc. rather than the nested `operator_v26` block).
+
+    For each centroid whose latest record has `operator_fetch_version ==
+    "v2.6"` but no `operator_v26` block, append a NEW record that
+    repackages the existing operator data into the nested shape. The
+    byte-offset index then prefers the latest (nested) record, leaving
+    older flat ones in the file as historical sediment. Returns the count
+    of records appended.
+    """
+    records = _load_latest_records(jsonl_path)
+    to_migrate: list[tuple[str, dict]] = []
+    for uid, rec in records.items():
+        if isinstance(rec.get(_OPERATOR_KEY), dict):
+            continue
+        if rec.get("operator_fetch_version") != _VERSION:
+            continue
+        to_migrate.append((uid, rec))
+    log.info("migration: %d records to migrate to nested operator_v26",
+             len(to_migrate))
+    if not to_migrate:
+        return 0
+
+    appended = 0
+    with jsonl_path.open("a") as fh:
+        for uid, rec in to_migrate:
+            block = {
+                "version": _VERSION,
+                "algorithm": _ALGORITHM_LABEL,
+                "candidate_strategy": _V26_PARAMS["candidate_strategy"],
+                "rerank_scorer": rec.get("operator_rerank_scorer") or _V26_PARAMS["rerank_scorer"],
+                "motif": rec.get("operator_motif"),
+                "native_for_centroid": rec.get("operator_native_for_centroid"),
+                "consensus_score": rec.get("operator_consensus_score"),
+                "rerank_score": rec.get("operator_rerank_score"),
+                "n_homologs_used": rec.get("operator_n_homologs_used"),
+                "n_candidates_evaluated": rec.get("operator_n_candidates_evaluated"),
+                "computed_at": rec.get("operator_computed_at"),
+            }
+            new_rec = {
+                **{k: v for k, v in rec.items()
+                    if k not in ("source", "computed_at",
+                                  "operator_fetch_version",
+                                  "operator_motif",
+                                  "operator_native_for_centroid",
+                                  "operator_consensus_score",
+                                  "operator_rerank_score",
+                                  "operator_rerank_scorer",
+                                  "operator_n_homologs_used",
+                                  "operator_n_candidates_evaluated",
+                                  "operator_computed_at")},
+                "source": _SOURCE,
+                "computed_at": datetime.now(timezone.utc).isoformat(),
+                _OPERATOR_KEY: block,
+            }
+            fh.write(json.dumps(new_rec) + "\n")
+            appended += 1
+    log.info("migration: appended %d nested records", appended)
     return appended
