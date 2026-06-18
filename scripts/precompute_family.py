@@ -76,6 +76,7 @@ ALL_STAGES = (
     "operon_retry",
     "promoter_retry",
     "compute_operators",
+    "compute_operators_v0",
     "members_dmnd",
 )
 
@@ -278,6 +279,7 @@ def stage_compute_operators(
     workers: int,
     max_records: int | None,
 ) -> None:
+    """Default V2.6 operator precompute — produces `operator_v26` blocks."""
     def progress(done: int, total: int, successes: int) -> None:
         logging.info(
             "[compute_operators %d/%d, with-consensus %d]",
@@ -287,6 +289,33 @@ def stage_compute_operators(
     compute_operators_mod.compute_operators(
         jsonl_path=fam_dir / "members_predictions.jsonl",
         cluster_homologs_path=fam_dir / "cluster_homologs.json",
+        version="v2.6",
+        workers=workers,
+        max_records=max_records,
+        on_progress=progress,
+    )
+
+
+def stage_compute_operators_v0(
+    _manifest: dict,
+    fam_dir: Path,
+    workers: int,
+    max_records: int | None,
+) -> None:
+    """Legacy V0 operator precompute — produces `operator_v0` blocks
+    alongside any existing `operator_v26` blocks on the same records.
+    Useful for direct V0-vs-V2.6 comparison without re-running queries.
+    """
+    def progress(done: int, total: int, successes: int) -> None:
+        logging.info(
+            "[compute_operators_v0 %d/%d, with-consensus %d]",
+            done, total, successes,
+        )
+
+    compute_operators_mod.compute_operators(
+        jsonl_path=fam_dir / "members_predictions.jsonl",
+        cluster_homologs_path=fam_dir / "cluster_homologs.json",
+        version="v0",
         workers=workers,
         max_records=max_records,
         on_progress=progress,
@@ -444,6 +473,8 @@ def main() -> None:
             stage_promoter_retry(manifest, fam_dir, args.workers, args.max_members)
         elif name == "compute_operators":
             stage_compute_operators(manifest, fam_dir, args.workers, args.max_members)
+        elif name == "compute_operators_v0":
+            stage_compute_operators_v0(manifest, fam_dir, args.workers, args.max_members)
         elif name == "members_dmnd":
             stage_members_dmnd(manifest, fam_dir, args.force)
         elif name == "xref_index":
