@@ -8,6 +8,8 @@ import {
   IconButton,
   Paper,
   Stack,
+  Tab,
+  Tabs,
   Toolbar,
   Typography,
 } from '@mui/material'
@@ -15,6 +17,7 @@ import TuneIcon from '@mui/icons-material/Tune'
 
 import InputForm from './components/InputForm.jsx'
 import AdvancedOptions from './components/AdvancedOptions.jsx'
+import CuratedSet from './components/CuratedSet.jsx'
 import OperatorMethodControls from './components/OperatorMethodControls.jsx'
 import PipelinePanel from './components/PipelinePanel.jsx'
 import ResultsPanel from './components/ResultsPanel.jsx'
@@ -32,7 +35,17 @@ const initialPipeline = () => ({
   error: null,
 })
 
+// URL param that selects the top-level view. `predict` (default) shows the
+// query form + pipeline output; `curated` shows the browsable high-confidence
+// set. Kept in the URL so users can bookmark / share a specific view.
+function initialTab() {
+  if (typeof window === 'undefined') return 'predict'
+  const t = new URL(window.location.href).searchParams.get('tab')
+  return t === 'curated' ? 'curated' : 'predict'
+}
+
 export default function App() {
+  const [tab, setTab] = useState(initialTab)
   const [inputMethod, setInputMethod] = useState('RefSeq')
   const [inputValue, setInputValue] = useState('WP_013083972.1')
   const [blast, setBlast] = useState(DEFAULT_BLAST)
@@ -88,6 +101,17 @@ export default function App() {
     }
     window.history.replaceState({}, '', url)
   }, [cacheMeta?.cache_key])
+
+  // Sync URL ?tab= when the top-level view changes.
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    if (tab === 'curated') {
+      url.searchParams.set('tab', 'curated')
+    } else {
+      url.searchParams.delete('tab')
+    }
+    window.history.replaceState({}, '', url)
+  }, [tab])
 
   // Compute operator extraction whenever the predict result OR the operator
   // method/params/alignment params change. Methods may be async (BioMSA),
@@ -197,12 +221,22 @@ export default function App() {
   return (
     <>
       <Toolbar sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Typography variant="h6" sx={{ flexGrow: 1 }}>
+        <Typography variant="h6" sx={{ mr: 3 }}>
           Snowprint
         </Typography>
-        <IconButton onClick={() => setDrawerOpen(true)} aria-label="advanced options">
-          <TuneIcon />
-        </IconButton>
+        <Tabs
+          value={tab}
+          onChange={(_e, v) => setTab(v)}
+          sx={{ flexGrow: 1, minHeight: 40 }}
+        >
+          <Tab value="predict" label="Predict" sx={{ minHeight: 40 }} />
+          <Tab value="curated" label="Curated set" sx={{ minHeight: 40 }} />
+        </Tabs>
+        {tab === 'predict' && (
+          <IconButton onClick={() => setDrawerOpen(true)} aria-label="advanced options">
+            <TuneIcon />
+          </IconButton>
+        )}
       </Toolbar>
 
       <Drawer anchor="right" open={drawerOpen} onClose={() => setDrawerOpen(false)}>
@@ -224,6 +258,9 @@ export default function App() {
       </Drawer>
 
       <Container maxWidth="lg" sx={{ py: 4 }}>
+        {tab === 'curated' ? (
+          <CuratedSet />
+        ) : (
         <Stack spacing={3}>
           <Typography variant="h4" align="center">
             Predict a regulator&apos;s DNA binding sequence
@@ -296,6 +333,7 @@ export default function App() {
             />
           )}
         </Stack>
+        )}
       </Container>
     </>
   )
