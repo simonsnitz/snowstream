@@ -5,6 +5,9 @@
 
 import { useState } from 'react'
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Alert,
   Box,
   Button,
@@ -17,11 +20,20 @@ import {
   Link,
   Paper,
   Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   Typography,
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
+
+import MotifLogo from './MotifLogo.jsx'
 
 function MotifDisplay({ motif }) {
   if (!motif) return <em style={{ color: '#999' }}>none</em>
@@ -57,6 +69,8 @@ function VersionPanel({ label, block, extra }) {
     consensus_score: cons,
     rerank_score: rerank,
     native_for_centroid: native,
+    frequency_matrix: ppm,
+    aligned_operators: aligned,
   } = block
   return (
     <Paper variant="outlined" sx={{ p: 2, flex: 1 }}>
@@ -74,6 +88,17 @@ function VersionPanel({ label, block, extra }) {
             <MotifDisplay motif={motif} />
           </Box>
         </Box>
+
+        {ppm?.length > 0 && (
+          <Box>
+            <Typography variant="caption" color="text.secondary">
+              Motif logo (PPM from {aligned?.length ?? 0} aligned operators)
+            </Typography>
+            <Box sx={{ mt: 0.5, minHeight: 80 }}>
+              <MotifLogo ppm={ppm} />
+            </Box>
+          </Box>
+        )}
 
         <Stack direction="row" spacing={3}>
           <Box>
@@ -106,8 +131,75 @@ function VersionPanel({ label, block, extra }) {
             </Box>
           </Box>
         )}
+
+        {aligned?.length > 0 && <AlignedOperatorsAccordion aligned={aligned} />}
       </Stack>
     </Paper>
+  )
+}
+
+
+// Expandable table of the per-homolog aligned operators that fed the
+// consensus. Sorted by align_score desc so the strongest hits are visible
+// without scrolling. Capped visual height with an inner scroll — the list
+// can be up to 100 entries per version.
+function AlignedOperatorsAccordion({ aligned }) {
+  const rows = [...aligned].sort((a, b) => {
+    const as = a.align_score ?? -Infinity
+    const bs = b.align_score ?? -Infinity
+    return bs - as
+  })
+  return (
+    <Accordion
+      disableGutters
+      elevation={0}
+      sx={{
+        border: '1px solid',
+        borderColor: 'divider',
+        '&:before': { display: 'none' },
+      }}
+    >
+      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+        <Typography variant="body2">
+          Per-homolog aligned operators ({rows.length})
+        </Typography>
+      </AccordionSummary>
+      <AccordionDetails sx={{ p: 0 }}>
+        <TableContainer sx={{ maxHeight: 340 }}>
+          <Table size="small" stickyHeader>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 700 }}>UniProt</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Predicted operator</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 700 }}>Align score</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {rows.map((r, i) => (
+                <TableRow key={`${r.uniprot_id}-${i}`} hover>
+                  <TableCell sx={{ fontFamily: 'ui-monospace, monospace', fontSize: 12, whiteSpace: 'nowrap' }}>
+                    {r.uniprot_id ? (
+                      <Link
+                        href={`https://www.uniprot.org/uniprotkb/${r.uniprot_id}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        underline="hover"
+                      >
+                        {r.uniprot_id}
+                      </Link>
+                    ) : <em style={{ color: '#999' }}>—</em>}
+                  </TableCell>
+                  <TableCell><MotifDisplay motif={r.operator} /></TableCell>
+                  <TableCell align="right" sx={{ fontSize: 12 }}>
+                    {r.align_score != null ? Number(r.align_score).toFixed(1) : '—'}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </AccordionDetails>
+    </Accordion>
   )
 }
 

@@ -13,9 +13,26 @@ For each passing centroid, emits:
   * genome                — NCBI nucleotide accession the operon was
                             extracted from
   * n_homologs            — count used in the consensus
-  * operator_v0           — { motif, consensus_score, native_for_centroid }
-  * operator_v26          — { motif, consensus_score, rerank_score,
-                              native_for_centroid }
+  * operator_v0 / operator_v26 — each with:
+      * motif                — consensus motif string (mixed-case: lowercase
+                                 flanks + uppercase palindromic core)
+      * consensus_score
+      * rerank_score         — V2.6 only
+      * native_for_centroid  — operator extracted from the centroid's own
+                                 promoter
+      * frequency_matrix     — PPM as [[pA, pC, pG, pT], ...] per position,
+                                 driven directly by the aligned operators —
+                                 ready to feed logojs-react's DNALogo
+      * aligned_operators    — list of {uniprot_id, operator, align_score}
+                                 for every homolog whose promoter aligned
+                                 above the score cutoff (this is what built
+                                 the consensus)
+
+Since the JSONL only stores summary fields (motif + score + native), the
+per-homolog aligned operators and the frequency matrix are regenerated
+here by calling operator_fetch inline for each qualifying centroid. This
+is fast (~1 minute with threading for the ~5k passing entries) because
+the promoters are already in memory from the JSONL scan.
 
 The output JSON is a list, sorted by uniprot_id for stable diffs across
 re-runs. Default output path is
@@ -27,8 +44,24 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Iterator
+from typing import Iterator, Optional
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+# Re-use the exact per-version specs the precompute stage uses so the
+# regenerated frequency_matrix + aligned_operators match what would be in
+# the JSONL if we ever grew the block schema to include them.
+from scripts.precompute.compute_operators import (  # noqa: E402
+    V0_SPEC,
+    V26_SPEC,
+    _build_homolog_input,
+)
 
 
 def load_fasta(path: Path) -> dict[str, str]:
@@ -101,29 +134,88 @@ def passes_filters(rec: dict, min_homologs: int, score_cutoff: float) -> bool:
     return s0 > score_cutoff or s26 > score_cutoff
 
 
+def _render_motif(motif) -> Optional[str]:
+    if not motif:
+        return None
+    if isinstance(motif, str):
+        return motif if motif != "None" else None
+    if isinstance(motif, list):
+        try:
+            return "".join(x["base"] for x in motif if isinstance(x, dict))
+        except Exception:
+            return None
+    return None
+
+
+def _version_block(spec, homolog_input: list[dict]) -> dict:
+    """Run operator_fetch for one version and pack the parts the frontend
+    needs into a JSON-serialisable dict."""
+    try:
+        result = spec.fetch(homolog_input, spec.fetch_params)
+    except Exception as exc:
+        return {"error": f"{type(exc).__name__}: {exc}"}
+
+    rerank_score = result.get("rerank_score")
+    if rerank_score in (None, float("-inf")):
+        rerank_score = None
+
+    # aligned_seqs is what fed the consensus. Trim to the compact
+    # {uniprot_id, operator, align_score} shape for the frontend.
+    aligned = []
+    for h in (result.get("aligned_seqs") or []):
+        if not isinstance(h, dict):
+            continue
+        score = h.get("Align score")
+        aligned.append({
+            "uniprot_id": h.get("Uniprot Id"),
+            "operator": h.get("Predicted operator"),
+            "align_score": (round(float(score), 2)
+                             if isinstance(score, (int, float)) else score),
+        })
+
+    # PPM: list of [A, C, G, T] per position, values in [0, 1]. Round to 3
+    # decimals — plenty for a sequence logo and cuts file size roughly in
+    # half vs full-precision floats.
+    freq = result.get("frequency_matrix") or []
+    freq_rounded = [
+        [round(float(x), 3) for x in row] if isinstance(row, list) else row
+        for row in freq
+    ]
+
+    cons = result.get("consensus_score")
+    if isinstance(cons, (int, float)):
+        cons = round(float(cons), 3)
+    if rerank_score is not None:
+        rerank_score = round(float(rerank_score), 4)
+
+    return {
+        "motif": _render_motif(result.get("motif")),
+        "consensus_score": cons,
+        "rerank_score": rerank_score,
+        "native_for_centroid": result.get("native_operator"),
+        "frequency_matrix": freq_rounded,
+        "aligned_operators": aligned,
+    }
+
+
 def build_entry(rec: dict,
                  sequences: dict[str, str],
-                 uid_to_refseq: dict[str, str]) -> dict:
+                 uid_to_refseq: dict[str, str],
+                 cluster_members: list[dict],
+                 records: dict[str, dict]) -> dict:
+    """Assemble the per-centroid output entry — runs V0 and V2.6
+    operator_fetch inline so the frequency matrix + per-homolog operators
+    can be captured (the compact JSONL block only stores summary fields)."""
     uid = rec["uniprot_id"]
-    v0 = rec["operator_v0"]
-    v26 = rec["operator_v26"]
+    homolog_input = _build_homolog_input(uid, cluster_members, records)
     return {
         "uniprot_id": uid,
         "ncbi_accession": uid_to_refseq.get(uid),
         "protein_sequence": sequences.get(uid),
         "genome": rec.get("genome"),
-        "n_homologs": v0.get("n_homologs_used"),
-        "operator_v0": {
-            "motif": v0.get("motif"),
-            "consensus_score": v0.get("consensus_score"),
-            "native_for_centroid": v0.get("native_for_centroid"),
-        },
-        "operator_v26": {
-            "motif": v26.get("motif"),
-            "consensus_score": v26.get("consensus_score"),
-            "rerank_score": v26.get("rerank_score"),
-            "native_for_centroid": v26.get("native_for_centroid"),
-        },
+        "n_homologs": rec.get("operator_v0", {}).get("n_homologs_used"),
+        "operator_v0": _version_block(V0_SPEC, homolog_input),
+        "operator_v26": _version_block(V26_SPEC, homolog_input),
     }
 
 
@@ -143,6 +235,9 @@ def main() -> None:
                     help="Output JSON path (default: "
                          "algorithms/benchmark/datasets/"
                          "<family>_high_confidence_operators.json)")
+    p.add_argument("--workers", type=int, default=8,
+                    help="Threads to run V0 + V2.6 operator_fetch inline "
+                         "over qualifying entries (default 8)")
     args = p.parse_args()
 
     root = Path(__file__).resolve().parent.parent
@@ -150,6 +245,7 @@ def main() -> None:
     jsonl_path = fam_dir / "members_predictions.jsonl"
     fasta_path = fam_dir / "members.fasta"
     refseq_map_path = fam_dir / "refseq_to_uniprot.json"
+    cluster_homologs_path = fam_dir / "cluster_homologs.json"
 
     out_path = args.output or (
         root / "algorithms" / "benchmark" / "datasets"
@@ -164,27 +260,60 @@ def main() -> None:
     uid_to_refseq = invert_refseq_map(refseq_map_path)
     print(f"  {len(uid_to_refseq):,} UniProt → RefSeq mappings", flush=True)
 
-    print(f"Scanning {jsonl_path} …", flush=True)
-    entries: list[dict] = []
-    missing_sequence = 0
-    for rec in load_latest_records(jsonl_path):
-        if not passes_filters(rec, args.min_homologs, args.score_cutoff):
-            continue
-        entry = build_entry(rec, sequences, uid_to_refseq)
-        if entry["protein_sequence"] is None:
-            missing_sequence += 1
-        entries.append(entry)
+    print(f"Loading {cluster_homologs_path} …", flush=True)
+    cluster_homologs = json.loads(cluster_homologs_path.read_text())
+    print(f"  {len(cluster_homologs):,} clusters", flush=True)
 
-    entries.sort(key=lambda e: e["uniprot_id"])
-    print(f"  {len(entries):,} entries pass filters "
+    print(f"Scanning {jsonl_path} …", flush=True)
+    records: dict[str, dict] = {}
+    qualifying: list[dict] = []
+    for rec in load_latest_records(jsonl_path):
+        uid = rec.get("uniprot_id")
+        if uid:
+            records[uid] = rec
+        if passes_filters(rec, args.min_homologs, args.score_cutoff):
+            qualifying.append(rec)
+    print(f"  {len(qualifying):,} entries pass filters "
            f"(n_homologs ≥ {args.min_homologs}, "
            f"consensus > {args.score_cutoff})")
+
+    print(f"Running V0 + V2.6 operator_fetch inline with {args.workers} workers "
+           f"(reconstructs frequency_matrix + aligned_operators) …", flush=True)
+    entries: list[dict] = []
+    lock = threading.Lock()
+    completed = 0
+    total = len(qualifying)
+
+    def _one(rec: dict) -> dict:
+        cm = cluster_homologs.get(rec["uniprot_id"]) or []
+        return build_entry(rec, sequences, uid_to_refseq, cm, records)
+
+    with ThreadPoolExecutor(max_workers=args.workers) as pool:
+        futures = {pool.submit(_one, r): r for r in qualifying}
+        for fut in as_completed(futures):
+            try:
+                entry = fut.result()
+            except Exception as exc:
+                print(f"  worker raised: {exc}", flush=True)
+                continue
+            with lock:
+                entries.append(entry)
+                completed += 1
+                if completed % 500 == 0 or completed == total:
+                    print(f"  {completed:,}/{total:,}", flush=True)
+
+    missing_sequence = sum(1 for e in entries if e["protein_sequence"] is None)
     if missing_sequence:
         print(f"  ⚠  {missing_sequence:,} entries had no sequence in members.fasta")
 
-    out_path.write_text(json.dumps(entries, indent=2))
+    entries.sort(key=lambda e: e["uniprot_id"])
+
+    # Compact JSON — this file is a data payload consumed by the frontend
+    # Vite build; pretty-printing was doubling its size.
+    out_path.write_text(json.dumps(entries, separators=(",", ":")))
     size_kb = out_path.stat().st_size / 1024
-    print(f"Wrote {len(entries):,} entries to {out_path} ({size_kb:.0f} KB)")
+    print(f"Wrote {len(entries):,} entries to {out_path} "
+           f"({size_kb:,.0f} KB)")
 
 
 if __name__ == "__main__":
